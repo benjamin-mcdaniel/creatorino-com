@@ -3,8 +3,13 @@ import withBundleAnalyzer from '@next/bundle-analyzer';
 
 const config: NextConfig = {
   reactStrictMode: true,
-  output: 'standalone',
+  output: 'export',  // Changed from 'standalone' to 'export' for static site generation
   compress: true,
+  images: {
+    unoptimized: true, // Required for static export
+  },
+  // Optional: Configure trailing slashes if needed
+  trailingSlash: true,
 };
 
 // Enable analyzer when ANALYZE is true
