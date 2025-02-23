@@ -1,4 +1,4 @@
-// components/Navbar.js
+// src/components/Navbar.js
 import { AppBar, Toolbar, Typography, Button } from '@mui/material';
 import Link from 'next/link';
 import { supabase } from '../lib/supabaseClient';
@@ -7,9 +7,16 @@ import useAuth from '../lib/useAuth';
 export default function Navbar() {
   const { user } = useAuth();
 
-  const handleSignIn = async () => {
-    const { error } = await supabase.auth.signIn({ provider: 'github' });
-    if (error) console.error('Error signing in:', error.message);
+  const handleEmailSignIn = async () => {
+    // Simple prompt-based login
+    const email = window.prompt('Enter your email:');
+    const password = window.prompt('Enter your password:');
+    if (!email || !password) return;
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+    if (error) console.error('Error signing in with email:', error.message);
   };
 
   const handleSignOut = async () => {
@@ -34,8 +41,8 @@ export default function Navbar() {
             Sign out
           </Button>
         ) : (
-          <Button color="inherit" onClick={handleSignIn}>
-            Sign in
+          <Button color="inherit" onClick={handleEmailSignIn}>
+            Sign in with Email
           </Button>
         )}
       </Toolbar>
