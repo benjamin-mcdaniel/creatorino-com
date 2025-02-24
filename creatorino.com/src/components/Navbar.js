@@ -1,50 +1,71 @@
 // src/components/Navbar.js
-import { AppBar, Toolbar, Typography, Button } from '@mui/material';
+import { AppBar, Toolbar, Typography, Button, Box, useTheme } from '@mui/material';
 import Link from 'next/link';
-import { supabase } from '../lib/supabaseClient';
-import useAuth from '../lib/useAuth';
 
 export default function Navbar() {
-  const { user } = useAuth();
-
-  const handleEmailSignIn = async () => {
-    // Simple prompt-based login
-    const email = window.prompt('Enter your email:');
-    const password = window.prompt('Enter your password:');
-    if (!email || !password) return;
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    if (error) console.error('Error signing in with email:', error.message);
-  };
-
-  const handleSignOut = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) console.error('Error signing out:', error.message);
-  };
+  const theme = useTheme();
 
   return (
-    <AppBar position="static">
+    <AppBar position="static" sx={{ backgroundColor: theme.palette.primary.main }}>
       <Toolbar>
-        <Typography variant="h6" sx={{ flexGrow: 1 }}>
-          Creatorino.com
-        </Typography>
-        <Link href="/" passHref>
-          <Button color="inherit">Home</Button>
-        </Link>
-        <Link href="/dashboard" passHref>
-          <Button color="inherit">Dashboard</Button>
-        </Link>
-        {user ? (
-          <Button color="inherit" onClick={handleSignOut}>
-            Sign out
-          </Button>
-        ) : (
-          <Button color="inherit" onClick={handleEmailSignIn}>
-            Sign in with Email
-          </Button>
-        )}
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            width: '100%',
+          }}
+        >
+          {/* Left side: Site name */}
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <Typography
+              variant="h6"
+              component={Link}
+              href="/"
+              sx={{
+                textDecoration: 'none',
+                color: theme.palette.primary.contrastText,
+                mr: 2,
+              }}
+            >
+              Creatorino.com
+            </Typography>
+          </Box>
+
+          {/* Right side: Features and Dashboard buttons with proper spacing */}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Link href="/features" passHref>
+              <Button
+                variant="outlined"
+                sx={{
+                  color: theme.palette.text.primary,
+                  borderColor: theme.palette.secondary.main,
+                  '&:hover': {
+                    borderColor: theme.palette.secondary.dark,
+                    color: theme.palette.secondary.dark,
+                  },
+                }}
+              >
+                Features
+              </Button>
+            </Link>
+            <Link href="/dashboard" passHref>
+              <Button
+                variant="outlined"
+                sx={{
+                  color: theme.palette.text.primary,
+                  borderColor: theme.palette.secondary.main,
+                  '&:hover': {
+                    borderColor: theme.palette.secondary.dark,
+                    color: theme.palette.secondary.dark,
+                  },
+                }}
+              >
+                Dashboard
+              </Button>
+            </Link>
+          </Box>
+        </Box>
       </Toolbar>
     </AppBar>
   );
