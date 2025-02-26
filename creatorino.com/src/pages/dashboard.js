@@ -1,16 +1,20 @@
 // src/pages/dashboard.js
+import React from 'react';
 import Layout from '../components/Layout';
+import Dashboard from '../components/dashboard';
+import DashboardLogin from '../components/dashboard/DashboardLogin';
+import { Box, CircularProgress } from '@mui/material';
 import useAuth from '../lib/useAuth';
-import { Typography, Box, Button } from '@mui/material';
-import Link from 'next/link';
 
-export default function Dashboard() {
+export default function DashboardPage() {
   const { user, loading } = useAuth();
 
   if (loading) {
     return (
       <Layout>
-        <Typography>Loading...</Typography>
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh' }}>
+          <CircularProgress />
+        </Box>
       </Layout>
     );
   }
@@ -18,41 +22,14 @@ export default function Dashboard() {
   if (!user) {
     return (
       <Layout>
-        <Box sx={{ p: 4, textAlign: 'center' }}>
-          <Typography variant="h5" gutterBottom>
-            You must be logged in to access this dashboard.
-          </Typography>
-          <Typography variant="body1" gutterBottom>
-            Please log in or sign up to continue.
-          </Typography>
-          <Box sx={{ mt: 2, display: 'flex', justifyContent: 'center', gap: 2 }}>
-            <Link href="/login" passHref>
-              <Button variant="outlined" color="secondary">
-                Login
-              </Button>
-            </Link>
-            <Link href="/signup" passHref>
-              <Button variant="outlined" color="secondary">
-                Sign Up
-              </Button>
-            </Link>
-          </Box>
-        </Box>
+        <DashboardLogin />
       </Layout>
     );
   }
 
   return (
     <Layout>
-      <Box sx={{ p: 4 }}>
-        <Typography variant="h4" gutterBottom>
-          Dashboard
-        </Typography>
-        <Typography variant="body1">
-          Welcome, {user.email}. This is your default SaaS dashboard where you can manage your product features, view analytics, and access your account settings.
-        </Typography>
-        {/* Additional dashboard components can be added here */}
-      </Box>
+      <Dashboard user={user} />
     </Layout>
   );
 }
