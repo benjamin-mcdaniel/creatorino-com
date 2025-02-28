@@ -44,7 +44,7 @@ export default function PricingContent() {
         '1GB storage',
         'Single user'
       ],
-      buttonText: 'Get Started',
+      buttonText: 'Try First',
       buttonVariant: 'outlined',
       highlighted: false
     },
@@ -61,7 +61,7 @@ export default function PricingContent() {
         'Custom domains',
         'No Creatorino branding'
       ],
-      buttonText: 'Subscribe Now',
+      buttonText: 'Im Down',
       buttonVariant: 'contained',
       highlighted: true
     },
@@ -79,7 +79,7 @@ export default function PricingContent() {
         'SLA guarantees',
         'Advanced security features'
       ],
-      buttonText: 'Contact Sales',
+      buttonText: '@ the Team',
       buttonVariant: 'outlined',
       highlighted: false
     }
@@ -242,7 +242,7 @@ export default function PricingContent() {
                           variant={plan.buttonVariant}
                           color="primary"
                           component={Link}
-                          href={plan.title === 'Free' ? '/signup' : '/contact'}
+                          href={plan.title === 'Free' ? '/signup' : '/signup'}
                           sx={{ 
                             py: 1.5,
                             borderRadius: 2,
