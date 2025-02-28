@@ -1,15 +1,18 @@
-import type { NextConfig } from "next";
-import withBundleAnalyzer from '@next/bundle-analyzer';
-
-const config: NextConfig = {
+/** @type {import('next').NextConfig} */
+const nextConfig = {
   reactStrictMode: true,
-  output: 'export',  // This is crucial - it will create an 'out' directory
-  compress: true,
+  
+  output: 'export',
+  
   images: {
     unoptimized: true,
-  }
-};
+  },
 
-export default withBundleAnalyzer({
-  enabled: process.env.ANALYZE === 'true'
-})(config);
+  experimental: {
+
+    workerThreads: false,
+    cpus: 1
+  }
+}
+
+module.exports = nextConfig
