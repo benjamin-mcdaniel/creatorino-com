@@ -129,25 +129,43 @@ export default function Navbar() {
 
             {/* Dashboard button with accent color */}
             {session ? (
-              <Button
-                variant="contained"
-                color="primary"
-                component={Link}
-                href="/dashboard"
-                sx={{ mr: 2, borderRadius: 2 }}
-              >
-                Dashboard
-              </Button>
+              <Link href="/dashboard" passHref>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  className="relative justify-center cursor-pointer inline-flex items-center space-x-2 text-center font-regular ease-out duration-200 rounded-md outline-none transition-all outline-0 focus-visible:outline-4 focus-visible:outline-offset-1 border hover:bg-opacity-80 focus-visible:outline-primary-600 text-sm px-4 py-2 h-[38px]"
+                  sx={{ 
+                    mr: 2,
+                    borderColor: 'primary.500',
+                    '&:hover': {
+                      borderColor: 'primary.600',
+                    },
+                    textTransform: 'none',
+                    fontWeight: 'normal'
+                  }}
+                >
+                  <span className="truncate">Dashboard</span>
+                </Button>
+              </Link>
             ) : (
-              <Button
-                variant="outlined"
-                color="primary"
-                component={Link}
-                href="/login"
-                sx={{ mr: 2, borderRadius: 2 }}
-              >
-                Sign In
-              </Button>
+              <Link href="/login" passHref>
+                <Button
+                  variant="outlined"
+                  color="primary"
+                  className="relative justify-center cursor-pointer inline-flex items-center space-x-2 text-center font-regular ease-out duration-200 rounded-md outline-none transition-all outline-0 focus-visible:outline-4 focus-visible:outline-offset-1 border hover:bg-opacity-80 focus-visible:outline-primary-600 text-sm px-4 py-2 h-[38px]"
+                  sx={{ 
+                    mr: 2,
+                    borderColor: 'primary.500',
+                    '&:hover': {
+                      borderColor: 'primary.600',
+                    },
+                    textTransform: 'none',
+                    fontWeight: 'normal'
+                  }}
+                >
+                  <span className="truncate">Sign In</span>
+                </Button>
+              </Link>
             )}
 
             {/* Profile avatar button */}

@@ -1,7 +1,8 @@
 // components/Layout.js
 import React from 'react';
 import Navbar from './Navbar';
-import { Box, Container } from '@mui/material';
+import Footer from './Footer'; // Add this import
+import { Box } from '@mui/material';
 import Head from 'next/head';
 
 export default function Layout({ children, title = 'Creatorino' }) {
@@ -16,6 +17,7 @@ export default function Layout({ children, title = 'Creatorino' }) {
         <Box component="main" sx={{ flexGrow: 1 }}>
           {children}
         </Box>
+        <Footer /> {/* Add the Footer component here */}
       </Box>
     </>
   );
