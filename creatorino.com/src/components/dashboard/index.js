@@ -1,19 +1,56 @@
 // src/components/dashboard/index.js
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Box, Container, Tabs, Tab } from '@mui/material';
 import EqualizerIcon from '@mui/icons-material/Equalizer';
 import YouTubeIcon from '@mui/icons-material/YouTube';
 import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
 import LinkIcon from '@mui/icons-material/Link';
+import { fetchUserProfile } from '../../lib/profileService';
 
 import PageHeader from '../common/PageHeader';
 
-
 export default function DashboardContent({ user }) {
   const [activeTab, setActiveTab] = useState(0);
+  const [profile, setProfile] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Fetch the user's profile to get the nickname
+    async function loadProfile() {
+      if (user) {
+        try {
+          const { data, error } = await fetchUserProfile();
+          if (data && !error) {
+            setProfile(data);
+          }
+        } catch (err) {
+          console.error('Error loading profile:', err);
+        } finally {
+          setLoading(false);
+        }
+      }
+    }
+
+    loadProfile();
+  }, [user]);
 
   const handleTabChange = (event, newValue) => {
     setActiveTab(newValue);
+  };
+
+  // Get the display name (nickname or fallback to email prefix)
+  const getDisplayName = () => {
+    if (profile?.nickname) {
+      return profile.nickname;
+    }
+    
+    // If we have a first name, use that
+    if (profile?.first_name) {
+      return profile.first_name;
+    }
+    
+    // Fallback to email prefix if no profile or nickname found
+    return user?.email?.split('@')[0] || 'Creator';
   };
 
   return (
@@ -21,7 +58,7 @@ export default function DashboardContent({ user }) {
       <Container maxWidth="lg">
         <PageHeader 
           user={user} 
-          title={`Welcome back, ${user.email?.split('@')[0]}`}
+          title={`Welcome back, ${getDisplayName()}`}
           subtitle="Here's an overview of your platforms and recent performance."
         />
 
@@ -36,7 +73,6 @@ export default function DashboardContent({ user }) {
         </Box>
 
         {/* Tab content */}
-
 
       </Container>
     </Box>
