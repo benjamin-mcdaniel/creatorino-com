@@ -39,7 +39,6 @@ export default function LoginForm() {
   const [mfaCode, setMFACode] = useState('');
   const [factorId, setFactorId] = useState(null);
   const [challengeId, setChallengeId] = useState(null);
-  const [userId, setUserId] = useState(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -47,8 +46,7 @@ export default function LoginForm() {
     setError(null);
     
     try {
-      // First, validate credentials without creating a session
-      // This first phase only verifies email/password
+      // First, attempt regular sign-in
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -56,13 +54,15 @@ export default function LoginForm() {
       
       if (error) throw error;
       
-      // Store user ID for the next phase
-      setUserId(data.user.id);
-      
       // Get the available MFA factors for this user
       const { success, totp, error: factorError } = await listMFAFactors();
       
-      if (factorError) throw factorError;
+      if (factorError) {
+        console.error("Error checking MFA factors:", factorError);
+        // If there's an error checking MFA, just proceed with normal login
+        router.push('/dashboard');
+        return;
+      }
       
       if (success && totp && totp.length > 0) {
         // User has TOTP factors enrolled - proceed to MFA step
@@ -82,11 +82,12 @@ export default function LoginForm() {
           throw new Error("Failed to create MFA challenge");
         }
       } else {
-        // If user doesn't have MFA set up, we'll redirect to setup page
-        // (In production, you might want to require MFA setup first)
-        throw new Error("MFA is required but not set up for this account. Please set up MFA first.");
+        // User doesn't have MFA set up - proceed with normal login
+        console.log("No MFA factors found, proceeding with normal login");
+        router.push('/dashboard');
       }
     } catch (error) {
+      console.error("Login error:", error);
       setError(error.message);
     } finally {
       setLoading(false);
@@ -122,6 +123,7 @@ export default function LoginForm() {
         throw new Error("MFA verification failed");
       }
     } catch (error) {
+      console.error("MFA verification error:", error);
       setError(error.message);
     } finally {
       setLoading(false);
@@ -223,7 +225,7 @@ export default function LoginForm() {
                       Signing in...
                     </>
                   ) : (
-                    'Continue'
+                    'Sign In'
                   )}
                 </Button>
               </form>
