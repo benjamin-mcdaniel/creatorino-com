@@ -1,8 +1,18 @@
+// components/ProfileContent.js
 'use client';
 
 import React, { useState, useEffect } from 'react';
 import Layout from './Layout';
 import { supabase } from '../lib/supabaseClient';
+import { fetchUserProfile, updateUserProfile, uploadAvatar } from '../lib/profileService';
+import { 
+  sendPasswordResetEmail, 
+  enrollMFA, 
+  verifyMFA, 
+  challengeMFA, 
+  listMFAFactors, 
+  unenrollMFA 
+} from '../lib/authService';
 import { useRouter } from 'next/router';
 import {
   Container,
@@ -20,29 +30,50 @@ import {
   Tab,
   Alert,
   Skeleton,
-  useTheme
+  useTheme,
+  CircularProgress,
+  IconButton,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  DialogContentText
 } from '@mui/material';
+import Link from 'next/link';
 import EditIcon from '@mui/icons-material/Edit';
 import SaveIcon from '@mui/icons-material/Save';
 import CancelIcon from '@mui/icons-material/Cancel';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import SecurityIcon from '@mui/icons-material/Security';
 import NotificationsIcon from '@mui/icons-material/Notifications';
+import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
 
 export default function ProfileContent() {
   const theme = useTheme();
   const router = useRouter();
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [profile, setProfile] = useState({
-    username: '',
-    fullName: '',
+    first_name: '',
+    last_name: '',
+    nickname: '',
     bio: '',
-    email: ''
+    avatar_url: ''
   });
   const [editMode, setEditMode] = useState(false);
   const [currentTab, setCurrentTab] = useState(0);
   const [message, setMessage] = useState({ type: '', text: '' });
+  const [avatarFile, setAvatarFile] = useState(null);
+  const [avatarPreview, setAvatarPreview] = useState(null);
+
+  // MFA related states
+  const [isMFAEnabled, setIsMFAEnabled] = useState(false);
+  const [mfaEnrollment, setMFAEnrollment] = useState(null);
+  const [verificationCode, setVerificationCode] = useState('');
+  const [mfaFactors, setMFAFactors] = useState([]);
+  const [showMFADialog, setShowMFADialog] = useState(false);
+  const [mfaLoading, setMFALoading] = useState(false);
 
   useEffect(() => {
     // Get current session
@@ -51,13 +82,14 @@ export default function ProfileContent() {
       setSession(data.session);
       
       if (data.session?.user) {
-        // Populate profile with user data
-        setProfile({
-          username: 'creator123',
-          fullName: 'Content Creator',
-          bio: 'Professional content creator and streamer. I love sharing gaming content and connecting with my audience.',
-          email: data.session.user.email
-        });
+        // Fetch profile data
+        const { data: profileData, error } = await fetchUserProfile();
+        
+        if (error) {
+          setMessage({ type: 'error', text: 'Error loading profile data' });
+        } else if (profileData) {
+          setProfile(profileData);
+        }
       } else {
         // Redirect to login if not authenticated
         router.push('/login');
@@ -67,18 +99,62 @@ export default function ProfileContent() {
     };
 
     fetchSession();
+
+    // Listen for auth changes
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      async (_event, session) => {
+        setSession(session);
+        if (!session) {
+          router.push('/login');
+        }
+      }
+    );
+
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
   }, [router]);
+
+  // Check if MFA is enabled
+  useEffect(() => {
+    const checkMFAStatus = async () => {
+      if (session) {
+        try {
+          setMFALoading(true);
+          const { success, factors, error } = await listMFAFactors();
+          
+          if (success && factors) {
+            setMFAFactors(factors);
+            // Check if there's a verified TOTP factor
+            setIsMFAEnabled(factors.some(f => f.factor_type === 'totp' && f.status === 'verified'));
+          } else if (error) {
+            console.error('Error checking MFA status:', error);
+          }
+        } catch (err) {
+          console.error('Error in MFA check:', err);
+        } finally {
+          setMFALoading(false);
+        }
+      }
+    };
+    
+    if (session) {
+      checkMFAStatus();
+    }
+  }, [session]);
 
   const handleTabChange = (event, newValue) => {
     setCurrentTab(newValue);
   };
 
   const handleEditToggle = () => {
-    setEditMode(!editMode);
     if (editMode) {
-      // Discard changes if canceling edit mode
-      setMessage({ type: '', text: '' });
+      // Reset form when canceling edit mode
+      setAvatarPreview(null);
+      setAvatarFile(null);
     }
+    setEditMode(!editMode);
+    setMessage({ type: '', text: '' });
   };
 
   const handleProfileChange = (e) => {
@@ -89,11 +165,157 @@ export default function ProfileContent() {
     });
   };
 
-  const handleSaveProfile = () => {
-    // Here you would save to your database
-    // For now, just show a success message
-    setMessage({ type: 'success', text: 'Profile updated successfully!' });
-    setEditMode(false);
+  const handleAvatarChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setAvatarFile(file);
+      // Create preview
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setAvatarPreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleSaveProfile = async () => {
+    try {
+      setSaving(true);
+      
+      // First, save profile details
+      const updatedProfile = {
+        first_name: profile.first_name,
+        last_name: profile.last_name,
+        nickname: profile.nickname,
+        bio: profile.bio
+      };
+      
+      const { error: updateError } = await updateUserProfile(updatedProfile);
+      
+      if (updateError) throw updateError;
+      
+      // Then, if there's a new avatar, upload it
+      if (avatarFile) {
+        const { error: avatarError } = await uploadAvatar(avatarFile);
+        if (avatarError) throw avatarError;
+      }
+      
+      setMessage({ type: 'success', text: 'Profile updated successfully!' });
+      setEditMode(false);
+      setAvatarFile(null);
+      setAvatarPreview(null);
+      
+      // Refresh profile data
+      const { data: refreshedProfile } = await fetchUserProfile();
+      if (refreshedProfile) {
+        setProfile(refreshedProfile);
+      }
+    } catch (error) {
+      console.error('Error saving profile:', error);
+      setMessage({ type: 'error', text: 'Failed to update profile: ' + error.message });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Handle enabling MFA
+  const handleEnableMFA = async () => {
+    try {
+      setMFALoading(true);
+      const { success, qrCode, secret, factorId, error } = await enrollMFA();
+      
+      if (success) {
+        setMFAEnrollment({ qrCode, secret, factorId });
+        setShowMFADialog(true);
+      } else {
+        setMessage({ type: 'error', text: `Failed to setup MFA: ${error.message}` });
+      }
+    } catch (err) {
+      console.error('Error enabling MFA:', err);
+      setMessage({ type: 'error', text: 'An unexpected error occurred while setting up MFA.' });
+    } finally {
+      setMFALoading(false);
+    }
+  };
+
+  // Handle verification of MFA code
+  const handleVerifyMFA = async () => {
+    if (!mfaEnrollment || !verificationCode) {
+      setMessage({ type: 'error', text: 'Please enter a verification code.' });
+      return;
+    }
+    
+    try {
+      setMFALoading(true);
+      
+      // Create a challenge
+      const { success: challengeSuccess, challengeId, error: challengeError } = 
+        await challengeMFA(mfaEnrollment.factorId);
+      
+      if (!challengeSuccess) {
+        setMessage({ type: 'error', text: `Challenge failed: ${challengeError.message}` });
+        return;
+      }
+      
+      // Verify the challenge
+      const { success, error } = await verifyMFA(
+        mfaEnrollment.factorId, 
+        challengeId, 
+        verificationCode
+      );
+      
+      if (success) {
+        setShowMFADialog(false);
+        setIsMFAEnabled(true);
+        setMFAEnrollment(null);
+        setVerificationCode('');
+        setMessage({ type: 'success', text: 'Two-factor authentication has been successfully enabled!' });
+        
+        // Refresh MFA factors
+        const { factors } = await listMFAFactors();
+        setMFAFactors(factors);
+      } else {
+        setMessage({ type: 'error', text: `Verification failed: ${error.message}` });
+      }
+    } catch (err) {
+      console.error('Error verifying MFA:', err);
+      setMessage({ type: 'error', text: 'An unexpected error occurred during verification.' });
+    } finally {
+      setMFALoading(false);
+    }
+  };
+
+  // Handle disabling MFA
+  const handleDisableMFA = async () => {
+    try {
+      setMFALoading(true);
+      
+      // Find the TOTP factor
+      const totpFactor = mfaFactors.find(f => f.factor_type === 'totp');
+      
+      if (!totpFactor) {
+        setMessage({ type: 'error', text: 'No MFA factor found to disable.' });
+        return;
+      }
+      
+      const { success, error } = await unenrollMFA(totpFactor.id);
+      
+      if (success) {
+        setIsMFAEnabled(false);
+        setMessage({ type: 'success', text: 'Two-factor authentication has been disabled.' });
+        
+        // Refresh MFA factors
+        const { factors } = await listMFAFactors();
+        setMFAFactors(factors);
+      } else {
+        setMessage({ type: 'error', text: `Failed to disable MFA: ${error.message}` });
+      }
+    } catch (err) {
+      console.error('Error disabling MFA:', err);
+      setMessage({ type: 'error', text: 'An unexpected error occurred while disabling MFA.' });
+    } finally {
+      setMFALoading(false);
+    }
   };
 
   if (loading) {
@@ -124,6 +346,9 @@ export default function ProfileContent() {
       </Layout>
     );
   }
+
+  const displayName = profile.nickname || profile.first_name || session?.user?.email?.split('@')[0] || 'User';
+  const fullName = [profile.first_name, profile.last_name].filter(Boolean).join(' ');
 
   return (
     <Layout title="Profile">
@@ -185,46 +410,90 @@ export default function ProfileContent() {
           <Grid item xs={12} md={4}>
             <Card sx={{ 
               mb: 4, 
-              borderRadius: 3,
+              borderRadius: 2,
               border: '1px solid #e0e0e0',
               bgcolor: '#f9f9f9',
             }}>
               <CardContent sx={{ textAlign: 'center', p: 4 }}>
-                <Avatar 
-                  sx={{ 
-                    width: 120, 
-                    height: 120, 
-                    mx: 'auto', 
-                    mb: 2,
-                    bgcolor: theme.palette.primary.main
-                  }}
-                >
-                  {profile.fullName.charAt(0)}
-                </Avatar>
+                <Box sx={{ position: 'relative', width: 120, height: 120, mx: 'auto', mb: 2 }}>
+                  <Avatar 
+                    src={avatarPreview || profile.avatar_url}
+                    sx={{ 
+                      width: 120, 
+                      height: 120, 
+                      bgcolor: theme.palette.primary.main
+                    }}
+                  >
+                    {displayName.charAt(0).toUpperCase()}
+                  </Avatar>
+                  
+                  {editMode && (
+                    <label htmlFor="avatar-upload">
+                      <input
+                        type="file"
+                        id="avatar-upload"
+                        accept="image/*"
+                        style={{ display: 'none' }}
+                        onChange={handleAvatarChange}
+                      />
+                      <IconButton 
+                        component="span"
+                        sx={{ 
+                          position: 'absolute', 
+                          bottom: 0, 
+                          right: 0,
+                          bgcolor: 'primary.main',
+                          color: 'white',
+                          '&:hover': {
+                            bgcolor: 'primary.dark',
+                          }
+                        }}
+                      >
+                        <PhotoCameraIcon />
+                      </IconButton>
+                    </label>
+                  )}
+                </Box>
+                
                 <Typography variant="h5" gutterBottom fontWeight="bold">
-                  {profile.fullName}
+                  {fullName || displayName}
                 </Typography>
+                
                 <Typography variant="body2" color="text.secondary" gutterBottom>
-                  @{profile.username}
+                  @{profile.nickname || session?.user?.email?.split('@')[0]}
                 </Typography>
+                
                 <Divider sx={{ my: 2 }} />
+                
                 <Typography variant="body2" paragraph>
-                  {profile.bio}
+                  {profile.bio || 'No bio provided yet.'}
                 </Typography>
-                <Button 
-                  variant="outlined" 
-                  color="primary" 
-                  startIcon={editMode ? <CancelIcon /> : <EditIcon />}
-                  onClick={handleEditToggle}
-                  sx={{ mt: 2 }}
-                >
-                  {editMode ? 'Cancel' : 'Edit Profile'}
-                </Button>
+                
+                <Link href="#" passHref>
+                  <Button 
+                    variant="outlined" 
+                    color="primary"
+                    startIcon={editMode ? <CancelIcon /> : <EditIcon />}
+                    onClick={handleEditToggle}
+                    className="relative justify-center cursor-pointer inline-flex items-center space-x-2 text-center font-regular ease-out duration-200 rounded-md outline-none transition-all outline-0 focus-visible:outline-4 focus-visible:outline-offset-1 border hover:bg-opacity-80 focus-visible:outline-primary-600 text-sm px-4 py-2 h-[38px]"
+                    sx={{ 
+                      mt: 2,
+                      borderColor: 'primary.500',
+                      '&:hover': {
+                        borderColor: 'primary.600',
+                      },
+                      textTransform: 'none',
+                      fontWeight: 'normal'
+                    }}
+                  >
+                    <span className="truncate">{editMode ? 'Cancel' : 'Edit Profile'}</span>
+                  </Button>
+                </Link>
               </CardContent>
             </Card>
 
             <Card sx={{ 
-              borderRadius: 3,
+              borderRadius: 2,
               border: '1px solid #e0e0e0',
               bgcolor: '#f9f9f9',
             }}>
@@ -238,14 +507,14 @@ export default function ProfileContent() {
                     Email Address
                   </Typography>
                   <Typography variant="body1" gutterBottom>
-                    {profile.email}
+                    {session?.user?.email}
                   </Typography>
 
                   <Typography variant="body2" color="text.secondary" gutterBottom sx={{ mt: 2 }}>
                     Account Created
                   </Typography>
                   <Typography variant="body1" gutterBottom>
-                    March 10, 2025
+                    {session?.user?.created_at ? new Date(session.user.created_at).toLocaleDateString() : 'N/A'}
                   </Typography>
 
                   <Typography variant="body2" color="text.secondary" gutterBottom sx={{ mt: 2 }}>
@@ -262,7 +531,7 @@ export default function ProfileContent() {
           {/* Main Content */}
           <Grid item xs={12} md={8}>
             <Card sx={{ 
-              borderRadius: 3,
+              borderRadius: 2,
               border: '1px solid #e0e0e0',
               bgcolor: 'white',
             }}>
@@ -275,7 +544,6 @@ export default function ProfileContent() {
                 >
                   <Tab icon={<AccountCircleIcon />} label="Profile" />
                   <Tab icon={<SecurityIcon />} label="Security" />
-                  <Tab icon={<NotificationsIcon />} label="Notifications" />
                 </Tabs>
               </Box>
 
@@ -293,9 +561,9 @@ export default function ProfileContent() {
                     <Grid container spacing={3} sx={{ mt: 1 }}>
                       <Grid item xs={12} sm={6}>
                         <TextField
-                          label="Full Name"
-                          name="fullName"
-                          value={profile.fullName}
+                          label="First Name"
+                          name="first_name"
+                          value={profile.first_name || ''}
                           onChange={handleProfileChange}
                           fullWidth
                           disabled={!editMode}
@@ -304,9 +572,9 @@ export default function ProfileContent() {
                       </Grid>
                       <Grid item xs={12} sm={6}>
                         <TextField
-                          label="Username"
-                          name="username"
-                          value={profile.username}
+                          label="Last Name"
+                          name="last_name"
+                          value={profile.last_name || ''}
                           onChange={handleProfileChange}
                           fullWidth
                           disabled={!editMode}
@@ -315,20 +583,31 @@ export default function ProfileContent() {
                       </Grid>
                       <Grid item xs={12}>
                         <TextField
-                          label="Email"
-                          name="email"
-                          value={profile.email}
+                          label="Nickname"
+                          name="nickname"
+                          value={profile.nickname || ''}
                           onChange={handleProfileChange}
                           fullWidth
                           disabled={!editMode}
                           sx={{ mb: 3 }}
+                          helperText="This will be displayed publicly"
+                        />
+                      </Grid>
+                      <Grid item xs={12}>
+                        <TextField
+                          label="Email"
+                          value={session?.user?.email || ''}
+                          fullWidth
+                          disabled={true}
+                          sx={{ mb: 3 }}
+                          helperText="Email cannot be changed"
                         />
                       </Grid>
                       <Grid item xs={12}>
                         <TextField
                           label="Bio"
                           name="bio"
-                          value={profile.bio}
+                          value={profile.bio || ''}
                           onChange={handleProfileChange}
                           fullWidth
                           multiline
@@ -341,14 +620,26 @@ export default function ProfileContent() {
 
                     {editMode && (
                       <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end' }}>
-                        <Button
-                          variant="contained"
-                          color="primary"
-                          startIcon={<SaveIcon />}
-                          onClick={handleSaveProfile}
-                        >
-                          Save Changes
-                        </Button>
+                        <Link href="#" passHref>
+                          <Button
+                            variant="contained"
+                            color="primary"
+                            startIcon={saving ? <CircularProgress size={20} color="inherit" /> : <SaveIcon />}
+                            onClick={handleSaveProfile}
+                            disabled={saving}
+                            className="relative justify-center cursor-pointer inline-flex items-center space-x-2 text-center font-regular ease-out duration-200 rounded-md outline-none transition-all outline-0 focus-visible:outline-4 focus-visible:outline-offset-1 border hover:bg-opacity-80 focus-visible:outline-primary-600 text-sm px-4 py-2 h-[38px]"
+                            sx={{ 
+                              borderColor: 'primary.500',
+                              '&:hover': {
+                                borderColor: 'primary.600',
+                              },
+                              textTransform: 'none',
+                              fontWeight: 'normal'
+                            }}
+                          >
+                            <span className="truncate">{saving ? 'Saving...' : 'Save Changes'}</span>
+                          </Button>
+                        </Link>
                       </Box>
                     )}
                   </Box>
@@ -369,11 +660,36 @@ export default function ProfileContent() {
                         Change Password
                       </Typography>
                       <Typography variant="body2" color="text.secondary" paragraph>
-                        Update your password to keep your account secure
+                        We'll send you an email with a link to reset your password.
                       </Typography>
-                      <Button variant="outlined" size="small">
-                        Change Password
-                      </Button>
+                      <Link href="#" passHref>
+                        <Button 
+                          variant="outlined" 
+                          size="small"
+                          className="relative justify-center cursor-pointer inline-flex items-center space-x-2 text-center font-regular ease-out duration-200 rounded-md outline-none transition-all outline-0 focus-visible:outline-4 focus-visible:outline-offset-1 border hover:bg-opacity-80 focus-visible:outline-primary-600 text-sm px-3 py-1 h-[32px]"
+                          sx={{ 
+                            borderColor: 'primary.500',
+                            '&:hover': {
+                              borderColor: 'primary.600',
+                            },
+                            textTransform: 'none',
+                            fontWeight: 'normal'
+                          }}
+                          onClick={async () => {
+                            if (session?.user?.email) {
+                              const { success, error } = await sendPasswordResetEmail(session.user.email);
+                              setMessage({ 
+                                type: success ? 'success' : 'error', 
+                                text: success 
+                                  ? 'Password reset email has been sent.' 
+                                  : `Failed to send reset email: ${error.message}` 
+                              });
+                            }
+                          }}
+                        >
+                          <span className="truncate">Reset Password</span>
+                        </Button>
+                      </Link>
                     </Paper>
                     
                     <Paper elevation={0} sx={{ p: 3, bgcolor: '#f9f9f9', borderRadius: 2, mb: 3 }}>
@@ -381,44 +697,52 @@ export default function ProfileContent() {
                         Two-Factor Authentication
                       </Typography>
                       <Typography variant="body2" color="text.secondary" paragraph>
-                        Add an extra layer of security to your account
+                        Add an extra layer of security to your account with two-factor authentication.
                       </Typography>
-                      <Button variant="outlined" size="small">
-                        Enable 2FA
-                      </Button>
-                    </Paper>
-                    
-                    <Paper elevation={0} sx={{ p: 3, bgcolor: '#f9f9f9', borderRadius: 2 }}>
-                      <Typography variant="subtitle1" fontWeight="medium" gutterBottom>
-                        Connected Accounts
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary" paragraph>
-                        Manage your connected social accounts
-                      </Typography>
-                      <Button variant="outlined" size="small">
-                        Manage Connections
-                      </Button>
-                    </Paper>
-                  </Box>
-                )}
-
-                {/* Notifications Tab */}
-                {currentTab === 2 && (
-                  <Box>
-                    <Typography variant="h5" gutterBottom fontWeight="bold">
-                      Notification Preferences
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary" paragraph>
-                      Control when and how you receive notifications
-                    </Typography>
-                    
-                    <Paper elevation={0} sx={{ p: 3, bgcolor: '#f9f9f9', borderRadius: 2, mb: 3 }}>
-                      <Typography variant="subtitle1" fontWeight="medium" paragraph>
-                        Coming Soon
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        Notification preferences will be available in a future update. Stay tuned!
-                      </Typography>
+                      
+                      {isMFAEnabled ? (
+                        <Button 
+                          variant="outlined" 
+                          color="error"
+                          size="small"
+                          className="relative justify-center cursor-pointer inline-flex items-center space-x-2 text-center font-regular ease-out duration-200 rounded-md outline-none transition-all outline-0 focus-visible:outline-4 focus-visible:outline-offset-1 border hover:bg-opacity-80 focus-visible:outline-primary-600 text-sm px-3 py-1 h-[32px]"
+                          sx={{ 
+                            borderColor: 'error.main',
+                            '&:hover': {
+                              borderColor: 'error.dark',
+                            },
+                            textTransform: 'none',
+                            fontWeight: 'normal'
+                          }}
+                          onClick={handleDisableMFA}
+                          disabled={mfaLoading}
+                        >
+                          <span className="truncate">
+                            {mfaLoading ? 'Processing...' : 'Disable 2FA'}
+                          </span>
+                        </Button>
+                      ) : (
+                        <Button 
+                          variant="outlined" 
+                          color="primary"
+                          size="small"
+                          className="relative justify-center cursor-pointer inline-flex items-center space-x-2 text-center font-regular ease-out duration-200 rounded-md outline-none transition-all outline-0 focus-visible:outline-4 focus-visible:outline-offset-1 border hover:bg-opacity-80 focus-visible:outline-primary-600 text-sm px-3 py-1 h-[32px]"
+                          sx={{ 
+                            borderColor: 'primary.500',
+                            '&:hover': {
+                              borderColor: 'primary.600',
+                            },
+                            textTransform: 'none',
+                            fontWeight: 'normal'
+                          }}
+                          onClick={handleEnableMFA}
+                          disabled={mfaLoading}
+                        >
+                          <span className="truncate">
+                            {mfaLoading ? 'Processing...' : 'Enable 2FA'}
+                          </span>
+                        </Button>
+                      )}
                     </Paper>
                   </Box>
                 )}
@@ -427,6 +751,55 @@ export default function ProfileContent() {
           </Grid>
         </Grid>
       </Container>
+
+      {/* MFA Setup Dialog */}
+      <Dialog open={showMFADialog} onClose={() => setShowMFADialog(false)}>
+        <DialogTitle>Setup Two-Factor Authentication</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Scan this QR code with your authenticator app (like Google Authenticator or Authy),
+            then enter the verification code below.
+          </DialogContentText>
+          
+          {mfaEnrollment?.qrCode && (
+            <Box sx={{ textAlign: 'center', my: 3 }}>
+              <div dangerouslySetInnerHTML={{ __html: mfaEnrollment.qrCode }} />
+            </Box>
+          )}
+          
+          {mfaEnrollment?.secret && (
+            <Box sx={{ mb: 3 }}>
+              <Typography variant="subtitle2">Manual entry code:</Typography>
+              <Typography variant="body2" sx={{ fontFamily: 'monospace', p: 1, bgcolor: 'grey.100', borderRadius: 1 }}>
+                {mfaEnrollment.secret}
+              </Typography>
+            </Box>
+          )}
+          
+          <TextField
+            autoFocus
+            margin="dense"
+            label="Verification Code"
+            fullWidth
+            variant="outlined"
+            value={verificationCode}
+            onChange={(e) => setVerificationCode(e.target.value)}
+            inputProps={{ inputMode: 'numeric', pattern: '[0-9]*' }}
+            helperText="Enter the 6-digit code from your authenticator app"
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setShowMFADialog(false)}>Cancel</Button>
+          <Button 
+            onClick={handleVerifyMFA} 
+            variant="contained" 
+            color="primary"
+            disabled={mfaLoading}
+          >
+            {mfaLoading ? 'Verifying...' : 'Verify'}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Layout>
   );
 }
