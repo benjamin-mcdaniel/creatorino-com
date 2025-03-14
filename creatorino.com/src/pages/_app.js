@@ -1,9 +1,10 @@
 // pages/_app.js
 import { ThemeProvider, CssBaseline } from '@mui/material';
 import { useEffect } from 'react';
-import Head from 'next/head';  // Make sure this import is here
+import Head from 'next/head';
 import { supabase } from '../lib/supabaseClient';
 import theme from '../utils/theme';
+import CookieConsent from '../components/CookieConsent';
 import '../styles/globals.css'; // For Tailwind CSS
 
 function MyApp({ Component, pageProps }) {
@@ -44,6 +45,7 @@ function MyApp({ Component, pageProps }) {
       <ThemeProvider theme={theme}>
         <CssBaseline />
         <Component {...pageProps} />
+        <CookieConsent />
       </ThemeProvider>
     </>
   );
