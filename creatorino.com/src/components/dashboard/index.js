@@ -6,6 +6,7 @@ import YouTubeIcon from '@mui/icons-material/YouTube';
 import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
 import LinkIcon from '@mui/icons-material/Link';
 import { fetchUserProfile } from '../../lib/profileService';
+import { useRouter } from 'next/router';
 
 import PageHeader from '../common/PageHeader';
 import DashboardOverview from './DashboardOverview';
@@ -14,9 +15,28 @@ import TwitchTab from './Twitch';
 import SocialLinksTab from './SocialLinks';
 
 export default function DashboardContent({ user }) {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState(0);
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  // Get the tab index from URL query parameter or localStorage
+  useEffect(() => {
+    // First check URL query parameter
+    if (router.query.tab) {
+      const tabIndex = parseInt(router.query.tab, 10);
+      if (!isNaN(tabIndex) && tabIndex >= 0 && tabIndex <= 3) {
+        setActiveTab(tabIndex);
+      }
+    } 
+    // If no query param, check localStorage
+    else if (typeof window !== 'undefined') {
+      const savedTab = localStorage.getItem('dashboardActiveTab');
+      if (savedTab !== null) {
+        setActiveTab(parseInt(savedTab, 10));
+      }
+    }
+  }, [router.query]);
 
   useEffect(() => {
     // Fetch the user's profile to get the nickname
@@ -40,6 +60,15 @@ export default function DashboardContent({ user }) {
 
   const handleTabChange = (event, newValue) => {
     setActiveTab(newValue);
+    
+    // Update the URL with the new tab value
+    router.push({
+      pathname: router.pathname,
+      query: { ...router.query, tab: newValue },
+    }, undefined, { shallow: true });
+    
+    // Also store in localStorage as backup
+    localStorage.setItem('dashboardActiveTab', newValue.toString());
   };
 
   // Get the display name (nickname or fallback to email prefix)

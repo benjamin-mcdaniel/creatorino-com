@@ -1,6 +1,6 @@
 // src/components/dashboard/SocialLinksCard.js
 import React from 'react';
-import { Typography, Paper, Link, List, ListItem, ListItemIcon, ListItemText, Divider, Button, Box, Skeleton } from '@mui/material';
+import { Typography, Paper, Box, List, ListItem, ListItemIcon, ListItemText, Divider, Button, Skeleton } from '@mui/material';
 import TwitterIcon from '@mui/icons-material/Twitter';
 import InstagramIcon from '@mui/icons-material/Instagram';
 import FacebookIcon from '@mui/icons-material/Facebook';
@@ -42,15 +42,23 @@ export default function SocialLinksCard() {
                 <ListItemText 
                   primary={link.platform} 
                   secondary={
-                    <Link 
-                      href={link.url} 
-                      target="_blank" 
+                    // The issue is here - using MUI's Link inside ListItemText creates nested <a> tags
+                    // Replace with a simple Box with styling instead
+                    <Box 
+                      component="a"
+                      href={link.url}
+                      target="_blank"
                       rel="noopener noreferrer"
-                      color="inherit"
-                      underline="hover"
+                      sx={{
+                        color: 'text.secondary',
+                        textDecoration: 'none',
+                        '&:hover': {
+                          textDecoration: 'underline'
+                        }
+                      }}
                     >
                       {formatLinkUrl(link.url)}
-                    </Link>
+                    </Box>
                   }
                 />
               </ListItem>
