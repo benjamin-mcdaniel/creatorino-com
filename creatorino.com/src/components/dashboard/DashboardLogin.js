@@ -27,12 +27,14 @@ export default function DashboardLogin() {
         You need to be logged in to view your dashboard. Please sign in or create an account to continue.
       </Typography>
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-        <Link href="/login" passHref>
+        {/* Approach 1: Use the Link as a wrapper without passHref */}
+        <Link href="/login">
           <Button variant="contained" color="primary" size="large">
             Log In
           </Button>
         </Link>
-        <Link href="/signup" passHref>
+        {/* Approach 2: Use the Link as a wrapper without passHref */}
+        <Link href="/signup">
           <Button variant="outlined" color="primary" size="large">
             Sign Up
           </Button>

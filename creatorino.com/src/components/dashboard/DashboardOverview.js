@@ -1,41 +1,28 @@
 // src/components/dashboard/DashboardOverview.js
 import React from 'react';
-import { Grid } from '@mui/material';
-import StatCards from './StatCards';
-import RecentContent from './RecentContent';
-import SocialLinks from './SocialLinks';
-import QuickActions from './QuickActions';
-import useYouTube from '../../hooks/useYouTube';
-import useTwitch from '../../hooks/useTwitch';
-import useSocialLinks from '../../hooks/useSocialLinks';
+import { Grid, Box } from '@mui/material';
+import { StatCards } from './StatCards';
+import { RecentContent } from './RecentContent';
+import { QuickActions } from './QuickActions';
+// Only include components you have already created
+// This is a simplified version that should work with your existing files
 
 export default function DashboardOverview() {
-  const { data: youtubeData, loading: youtubeLoading } = useYouTube();
-  const { data: twitchData, loading: twitchLoading } = useTwitch();
-  const { data: socialData, loading: socialLoading } = useSocialLinks();
-
   return (
     <>
-      <StatCards 
-        youtubeStats={youtubeData} 
-        twitchStats={twitchData} 
-        loading={youtubeLoading || twitchLoading}
-      />
+      <StatCards />
       
-      <Grid container spacing={3}>
+      <Grid container spacing={3} sx={{ mt: 2 }}>
         <Grid item xs={12} md={8}>
-          <RecentContent 
-            youtubeVideos={youtubeData?.recentVideos} 
-            twitchStreams={twitchData?.recentStreams}
-            loading={youtubeLoading || twitchLoading}
-          />
+          <RecentContent />
         </Grid>
         
         <Grid item xs={12} md={4}>
-          <SocialLinks 
-            links={socialData}
-            loading={socialLoading}
-          />
+          {/* Add a Box to provide spacing between components */}
+          <Box sx={{ mb: 3 }}>
+            {/* Placeholder for SocialLinksCard - will add this once it's fully implemented */}
+            {/* <SocialLinksCard /> */}
+          </Box>
           <QuickActions />
         </Grid>
       </Grid>

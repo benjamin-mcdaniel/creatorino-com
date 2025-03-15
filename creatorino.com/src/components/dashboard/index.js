@@ -8,6 +8,10 @@ import LinkIcon from '@mui/icons-material/Link';
 import { fetchUserProfile } from '../../lib/profileService';
 
 import PageHeader from '../common/PageHeader';
+import DashboardOverview from './DashboardOverview';
+import YouTubeTab from './YouTube';
+import TwitchTab from './Twitch';
+import SocialLinksTab from './SocialLinks';
 
 export default function DashboardContent({ user }) {
   const [activeTab, setActiveTab] = useState(0);
@@ -73,7 +77,12 @@ export default function DashboardContent({ user }) {
         </Box>
 
         {/* Tab content */}
-
+        <Box sx={{ py: 2 }}>
+          {activeTab === 0 && <DashboardOverview />}
+          {activeTab === 1 && <YouTubeTab />}
+          {activeTab === 2 && <TwitchTab />}
+          {activeTab === 3 && <SocialLinksTab />}
+        </Box>
       </Container>
     </Box>
   );
