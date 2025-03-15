@@ -9,10 +9,10 @@ import { fetchUserProfile } from '../../lib/profileService';
 import { useRouter } from 'next/router';
 
 import PageHeader from '../common/PageHeader';
-import DashboardOverview from './DashboardOverview';
-import YouTubeTab from './YouTube';
-import TwitchTab from './Twitch';
-import SocialLinksTab from './SocialLinks';
+import Overview from './Overview';
+import YouTube from './YouTube';
+import Twitch from './Twitch';
+import SocialLinks from './SocialLinks';
 
 export default function DashboardContent({ user }) {
   const router = useRouter();
@@ -107,10 +107,10 @@ export default function DashboardContent({ user }) {
 
         {/* Tab content */}
         <Box sx={{ py: 2 }}>
-          {activeTab === 0 && <DashboardOverview />}
-          {activeTab === 1 && <YouTubeTab />}
-          {activeTab === 2 && <TwitchTab />}
-          {activeTab === 3 && <SocialLinksTab />}
+          {activeTab === 0 && <Overview />}
+          {activeTab === 1 && <YouTube />}
+          {activeTab === 2 && <Twitch />}
+          {activeTab === 3 && <SocialLinks />}
         </Box>
       </Container>
     </Box>

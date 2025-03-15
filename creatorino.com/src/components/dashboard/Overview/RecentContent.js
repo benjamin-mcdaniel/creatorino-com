@@ -1,15 +1,14 @@
-// src/components/dashboard/RecentContent.js
+// src/components/dashboard/Overview/RecentContent.js
 import React from 'react';
-import { Grid, Typography, Box, Button, Paper, List, ListItem, ListItemAvatar, ListItemText, Avatar, Divider, IconButton } from '@mui/material';
-import Card from '../common/Card';
-import { CardSkeleton } from '../common/LoadingState';
+import { Grid, Typography, Box, Button, Paper, List, ListItem, ListItemAvatar, Avatar, Divider, IconButton } from '@mui/material';
+import { CardSkeleton } from '../../common/LoadingState';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import YouTubeIcon from '@mui/icons-material/YouTube';
 import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
 
-import useYouTube from '../../hooks/useYouTube';
-import useTwitch from '../../hooks/useTwitch';
-import { formatNumber } from '../../utils/formatters';
+import useYouTube from '../../../hooks/useYouTube';
+import useTwitch from '../../../hooks/useTwitch';
+import { formatNumber } from '../../../utils/formatters';
 
 export function RecentContent() {
   const { videos, loading: youtubeLoading } = useYouTube();
@@ -47,17 +46,21 @@ export function RecentContent() {
                       <YouTubeIcon />
                     </Avatar>
                   </ListItemAvatar>
-                  <ListItemText
-                    primary={video.title}
-                    secondary={
-                      <>
-                        <Typography component="span" variant="body2" color="text.primary">
-                          {formatNumber(video.views)} views
-                        </Typography>
-                        {` — Published ${video.published}`}
-                      </>
-                    }
-                  />
+                  
+                  <Box sx={{ flex: 1, ml: 2 }}>
+                    <Typography variant="body1" component="div">
+                      {video.title}
+                    </Typography>
+                    <Box sx={{ display: 'flex', alignItems: 'center', mt: 0.5 }}>
+                      <Typography variant="body2" component="span" color="text.primary">
+                        {formatNumber(video.views)} views
+                      </Typography>
+                      <Typography variant="body2" component="span" color="text.secondary" sx={{ ml: 1 }}>
+                        — Published {video.published}
+                      </Typography>
+                    </Box>
+                  </Box>
+                  
                   <IconButton edge="end">
                     <MoreVertIcon />
                   </IconButton>
@@ -87,17 +90,21 @@ export function RecentContent() {
                       <SportsEsportsIcon />
                     </Avatar>
                   </ListItemAvatar>
-                  <ListItemText
-                    primary={stream.title}
-                    secondary={
-                      <>
-                        <Typography component="span" variant="body2" color="text.primary">
-                          {formatNumber(stream.viewers)} avg. viewers
-                        </Typography>
-                        {` — Duration: ${stream.duration}`}
-                      </>
-                    }
-                  />
+                  
+                  <Box sx={{ flex: 1, ml: 2 }}>
+                    <Typography variant="body1" component="div">
+                      {stream.title}
+                    </Typography>
+                    <Box sx={{ display: 'flex', alignItems: 'center', mt: 0.5 }}>
+                      <Typography variant="body2" component="span" color="text.primary">
+                        {formatNumber(stream.viewers)} avg. viewers
+                      </Typography>
+                      <Typography variant="body2" component="span" color="text.secondary" sx={{ ml: 1 }}>
+                        — Duration: {stream.duration}
+                      </Typography>
+                    </Box>
+                  </Box>
+                  
                   <IconButton edge="end">
                     <MoreVertIcon />
                   </IconButton>

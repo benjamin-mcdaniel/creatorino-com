@@ -1,16 +1,16 @@
-// src/components/dashboard/StatCards.js
+// src/components/dashboard/Overview/StatCards.js
 import React from 'react';
 import { Grid } from '@mui/material';
-import StatCard from '../common/StatCard';
-import { StatCardSkeleton } from '../common/LoadingState';
+import StatCard from '../../common/StatCard';
+import { StatCardSkeleton } from '../../common/LoadingState';
 import PersonIcon from '@mui/icons-material/Person';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import PeopleIcon from '@mui/icons-material/People';
 
-import useYouTube from '../../hooks/useYouTube';
-import useTwitch from '../../hooks/useTwitch';
-import { formatNumber } from '../../utils/formatters';
+import useYouTube from '../../../hooks/useYouTube';
+import useTwitch from '../../../hooks/useTwitch';
+import { formatNumber } from '../../../utils/formatters';
 
 export function StatCards() {
   const { stats: youtubeStats, loading: youtubeLoading } = useYouTube();
