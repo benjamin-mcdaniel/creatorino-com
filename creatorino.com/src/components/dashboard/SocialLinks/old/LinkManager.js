@@ -8,7 +8,7 @@ import {
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 // Removed the import for react-beautiful-dnd
-import { PLATFORM_OPTIONS } from './utils';
+import { PLATFORM_OPTIONS } from '../utils';
 
 export default function LinkManager({ links, addLink, updateLink, deleteLink, reorderLinks }) {
   const [dialogOpen, setDialogOpen] = useState(false);

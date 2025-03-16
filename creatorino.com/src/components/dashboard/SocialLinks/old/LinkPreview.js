@@ -8,7 +8,7 @@ import FacebookIcon from '@mui/icons-material/Facebook';
 import PublicIcon from '@mui/icons-material/Public';
 import LinkedInIcon from '@mui/icons-material/LinkedIn';
 import GitHubIcon from '@mui/icons-material/GitHub';
-import { THEME_OPTIONS } from './utils';
+import { THEME_OPTIONS } from '../utils';
 
 // Map platform keys to icons
 const platformIcons = {

@@ -5,7 +5,7 @@ import {
   Radio, RadioGroup, FormControlLabel, TextField, Button,
   Tabs, Tab, Divider, InputLabel, MenuItem, FormControl, Select
 } from '@mui/material';
-import { THEME_OPTIONS, FONT_OPTIONS, BUTTON_STYLES } from './utils';
+import { THEME_OPTIONS, FONT_OPTIONS, BUTTON_STYLES } from '../utils';
 import LinkPreview from './LinkPreview';
 
 export default function ThemeCustomizer({ profile, updateProfile }) {

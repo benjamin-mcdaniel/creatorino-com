@@ -1,6 +1,6 @@
 // src/components/dashboard/index.js
 import React, { useState, useEffect } from 'react';
-import { Box, Container, Tabs, Tab } from '@mui/material';
+import { Box, Container, Tabs, Tab, styled } from '@mui/material'; // Add styled import
 import EqualizerIcon from '@mui/icons-material/Equalizer';
 import YouTubeIcon from '@mui/icons-material/YouTube';
 import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
@@ -13,6 +13,19 @@ import Overview from './Overview';
 import YouTube from './YouTube';
 import Twitch from './Twitch';
 import SocialLinks from './SocialLinks';
+
+// Create a custom styled Tab component
+const StyledTab = styled(Tab)(({ theme }) => ({
+  minHeight: 48,
+  minWidth: 120, // Make it wider
+  padding: '6px 16px',
+  // Position icon to the left of text
+  flexDirection: 'row',
+  '& .MuiTab-iconWrapper': {
+    marginBottom: 0,
+    marginRight: theme.spacing(1)
+  }
+}));
 
 export default function DashboardContent({ user }) {
   const router = useRouter();
@@ -89,19 +102,19 @@ export default function DashboardContent({ user }) {
   return (
     <Box sx={{ bgcolor: 'background.default', minHeight: '100vh', pt: 2, pb: 6 }}>
       <Container maxWidth="lg">
-        <PageHeader 
-          user={user} 
-          title={`Welcome back, ${getDisplayName()}`}
-          subtitle="Here's an overview of your platforms and recent performance."
-        />
-
         {/* Platform selection tabs */}
         <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
-          <Tabs value={activeTab} onChange={handleTabChange} aria-label="platform tabs">
-            <Tab icon={<EqualizerIcon />} label="Overview" />
-            <Tab icon={<YouTubeIcon />} label="YouTube" />
-            <Tab icon={<SportsEsportsIcon />} label="Twitch" />
-            <Tab icon={<LinkIcon />} label="Social Links" />
+          <Tabs 
+            value={activeTab} 
+            onChange={handleTabChange} 
+            aria-label="platform tabs"
+            variant="fullWidth" // Makes tabs take up full width
+            sx={{ minHeight: 48 }} // Reduce overall tab height
+          >
+            <StyledTab icon={<EqualizerIcon />} label="Overview" />
+            <StyledTab icon={<YouTubeIcon />} label="YouTube" />
+            <StyledTab icon={<SportsEsportsIcon />} label="Twitch" />
+            <StyledTab icon={<LinkIcon />} label="Social Links" />
           </Tabs>
         </Box>
 
