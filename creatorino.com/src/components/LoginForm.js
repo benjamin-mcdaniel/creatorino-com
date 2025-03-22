@@ -52,7 +52,13 @@ export default function LoginForm() {
         password,
       });
       
-      if (error) throw error;
+      // Handle authentication error gracefully instead of throwing
+      if (error) {
+        console.log("Authentication error:", error.message);
+        setError(error.message);
+        setLoading(false);
+        return; // Exit early
+      }
       
       // Get the available MFA factors for this user
       const { success, totp, error: factorError } = await listMFAFactors();
@@ -73,13 +79,17 @@ export default function LoginForm() {
         const { success: challengeSuccess, challengeId: newChallengeId, error: challengeError } = 
           await challengeMFA(factor.id);
           
-        if (challengeError) throw challengeError;
+        if (challengeError) {
+          setError(challengeError.message);
+          setLoading(false);
+          return;
+        }
         
         if (challengeSuccess) {
           setChallengeId(newChallengeId);
           setShowMFA(true);
         } else {
-          throw new Error("Failed to create MFA challenge");
+          setError("Failed to create MFA challenge");
         }
       } else {
         // User doesn't have MFA set up - proceed with normal login
@@ -87,8 +97,9 @@ export default function LoginForm() {
         router.push('/dashboard');
       }
     } catch (error) {
-      console.error("Login error:", error);
-      setError(error.message);
+      // This catch block will only handle unexpected errors, not auth errors
+      console.error("Unexpected login error:", error);
+      setError("An unexpected error occurred. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -107,7 +118,11 @@ export default function LoginForm() {
         mfaCode
       );
       
-      if (verifyError) throw verifyError;
+      if (verifyError) {
+        setError(verifyError.message);
+        setLoading(false);
+        return;
+      }
       
       if (success) {
         // After successful MFA verification, check if we have a session
@@ -117,14 +132,14 @@ export default function LoginForm() {
           // Successfully authenticated with MFA
           router.push('/dashboard');
         } else {
-          throw new Error("MFA verification succeeded but no session was created");
+          setError("MFA verification succeeded but no session was created");
         }
       } else {
-        throw new Error("MFA verification failed");
+        setError("MFA verification failed");
       }
     } catch (error) {
       console.error("MFA verification error:", error);
-      setError(error.message);
+      setError("An unexpected error occurred during verification. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -135,9 +150,11 @@ export default function LoginForm() {
       const { error } = await supabase.auth.signInWithOAuth({
         provider,
       });
-      if (error) throw error;
+      if (error) {
+        setError(error.message);
+      }
     } catch (error) {
-      setError(error.message);
+      setError("An unexpected error occurred with social login. Please try again.");
     }
   };
 

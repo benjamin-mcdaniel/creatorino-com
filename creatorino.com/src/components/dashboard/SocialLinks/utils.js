@@ -1,6 +1,20 @@
 // src/components/dashboard/SocialLinks/utils.js
+import React from 'react';
+import TwitterIcon from '@mui/icons-material/Twitter';
+import YouTubeIcon from '@mui/icons-material/YouTube';
+import InstagramIcon from '@mui/icons-material/Instagram';
+import FacebookIcon from '@mui/icons-material/Facebook';
+import PublicIcon from '@mui/icons-material/Public';
+import LinkedInIcon from '@mui/icons-material/LinkedIn';
+import GitHubIcon from '@mui/icons-material/GitHub';
+import MusicVideoIcon from '@mui/icons-material/MusicVideo'; // Using MusicVideo as a stand-in for TikTok
+import VideocamIcon from '@mui/icons-material/Videocam'; // Using Videocam as a stand-in for Twitch
+import PodcastsIcon from '@mui/icons-material/Podcasts';
+import BookIcon from '@mui/icons-material/Book'; // For Medium, Substack
+import HandshakeIcon from '@mui/icons-material/Handshake'; // For Patreon
+import ForumIcon from '@mui/icons-material/Forum'; // For Discord
 
-// Five color theme options
+// Color themes for social links page
 export const COLOR_THEMES = [
   {
     id: 'default',
@@ -44,9 +58,6 @@ export const COLOR_THEMES = [
   }
 ];
 
-// Keep original theme options for compatibility
-export const THEME_OPTIONS = COLOR_THEMES;
-
 // Platform options with standardized keys and names
 export const PLATFORM_OPTIONS = [
   { key: 'twitter', name: 'Twitter / X' },
@@ -64,23 +75,32 @@ export const PLATFORM_OPTIONS = [
   { key: 'substack', name: 'Substack' }
 ];
 
-// Font options
-export const FONT_OPTIONS = [
-  { value: 'Inter', label: 'Inter (Modern)' },
-  { value: 'Roboto', label: 'Roboto (Clean)' },
-  { value: 'Lato', label: 'Lato (Friendly)' },
-  { value: 'Montserrat', label: 'Montserrat (Bold)' },
-  { value: 'Poppins', label: 'Poppins (Rounded)' },
-  { value: 'Open Sans', label: 'Open Sans (Readable)' },
-  { value: 'Playfair Display', label: 'Playfair Display (Elegant)' }
-];
+// Map platform keys to icons
+const platformIcons = {
+  twitter: <TwitterIcon />,
+  youtube: <YouTubeIcon />,
+  instagram: <InstagramIcon />,
+  facebook: <FacebookIcon />,
+  linkedin: <LinkedInIcon />,
+  github: <GitHubIcon />,
+  tiktok: <MusicVideoIcon />,
+  twitch: <VideocamIcon />,
+  discord: <ForumIcon />,
+  patreon: <HandshakeIcon />,
+  spotify: <PodcastsIcon />,
+  medium: <BookIcon />,
+  substack: <BookIcon />,
+  default: <PublicIcon />
+};
 
-// Button style options
-export const BUTTON_STYLES = [
-  { value: 'rounded', label: 'Rounded' },
-  { value: 'pill', label: 'Pill' },
-  { value: 'square', label: 'Square' }
-];
+/**
+ * Get icon component for a specific platform
+ * @param {string} platformKey - Platform identifier
+ * @returns {React.ReactElement} - Icon component
+ */
+export function getIcon(platformKey) {
+  return platformIcons[platformKey] || platformIcons.default;
+}
 
 /**
  * Validate a URL - simple validation for UI feedback
@@ -141,52 +161,12 @@ export function formatNumber(num) {
 }
 
 /**
- * Format a date for display
- * @param {string} dateString - ISO date string
- * @returns {string} - Formatted date
+ * Ensure URL has a protocol
+ * @param {string} url - URL to format
+ * @returns {string} - URL with protocol
  */
-export function formatDate(dateString) {
-  const date = new Date(dateString);
-  return date.toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric'
-  });
+export function ensureUrlProtocol(url) {
+  if (!url) return '';
+  if (url.startsWith('http://') || url.startsWith('https://')) return url;
+  return `https://${url}`;
 }
-
-// For future Supabase integration - database schema design
-
-/**
- * Suggested Supabase Schema:
- * 
- * Table: profiles
- * - id: uuid (primary key, references auth.users.id)
- * - title: text
- * - bio: text
- * - theme_id: text
- * - button_style: text
- * - font_family: text
- * - background_type: text
- * - background_value: text
- * - created_at: timestamp with time zone
- * - updated_at: timestamp with time zone
- * 
- * Table: links
- * - id: uuid (primary key)
- * - profile_id: uuid (foreign key references profiles.id)
- * - title: text
- * - url: text
- * - platform_key: text
- * - description: text
- * - sort_order: integer
- * - created_at: timestamp with time zone
- * - updated_at: timestamp with time zone
- * 
- * Table: link_clicks (for future analytics)
- * - id: uuid (primary key)
- * - link_id: uuid (foreign key references links.id)
- * - visitor_id: text (anonymous identifier)
- * - referrer: text
- * - user_agent: text
- * - created_at: timestamp with time zone
- */
