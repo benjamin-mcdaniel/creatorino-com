@@ -2,6 +2,9 @@ module.exports = {
   // Use trailing slash to be consistent with server routing
   trailingSlash: true,
   
+  // This is required for static exports with Cloudflare Pages
+  output: 'export',
+  
   // This enables SSG to handle any URL pattern for s/[username]
   async exportPathMap(defaultPathMap, { dev, dir, outDir, distDir, buildId }) {
     // Skip this during development
