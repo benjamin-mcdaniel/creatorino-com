@@ -32,7 +32,7 @@ const platformIcons = {
 export default function UserLinksPage() {
   // Get the username from the URL
   const router = useRouter();
-  const { username } = router.query;
+  const { username: queryUsername } = router.query;
 
   // State for client-side data
   const [profile, setProfile] = useState(null);
@@ -41,29 +41,45 @@ export default function UserLinksPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [notFound, setNotFound] = useState(false);
+  const [realUsername, setRealUsername] = useState(null);
+
+  // Extract username from URL path (this is key for Cloudflare Pages static hosting)
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const pathParts = window.location.pathname.split('/');
+      if (pathParts.length > 2) {
+        const pathUsername = pathParts[2].replace(/\/$/, ''); // Remove trailing slash if present
+        setRealUsername(pathUsername);
+      } else if (queryUsername && queryUsername !== 'fallback') {
+        setRealUsername(queryUsername);
+      }
+    } else if (queryUsername && queryUsername !== 'fallback') {
+      setRealUsername(queryUsername);
+    }
+  }, [queryUsername, router.isReady]);
 
   // Fetch data on client side when username is available
   useEffect(() => {
     async function fetchUserData() {
-      if (!username) return;
+      if (!realUsername || realUsername === 'fallback') return;
       
       setLoading(true);
       setError(null);
       setNotFound(false);
 
       try {
-        console.log('[UserLinksPage] Fetching data for username:', username);
+        console.log('[UserLinksPage] Fetching data for username:', realUsername);
 
         // First get the profile by nickname
         const { data: profileData, error: profileError } = await supabase
           .from('profiles')
           .select('*')
-          .eq('nickname', username)
+          .eq('nickname', realUsername)
           .single();
 
         if (profileError) {
           console.error('[UserLinksPage] Profile error:', profileError.code, profileError.message, profileError);
-          logSupabaseError('Fetching profile', profileError, { username });
+          logSupabaseError('Fetching profile', profileError, { username: realUsername });
           if (profileError.code === 'PGRST116') {
             // No results found
             setNotFound(true);
@@ -75,14 +91,14 @@ export default function UserLinksPage() {
         }
 
         if (!profileData) {
-          console.log('No profile found for username:', username);
+          console.log('No profile found for username:', realUsername);
           setNotFound(true);
           setLoading(false);
           return;
         }
 
         setProfile(profileData);
-        console.log('Found profile for:', username);
+        console.log('Found profile for:', realUsername);
 
         // Get settings for this user
         const { data: settingsData, error: settingsError } = await supabase
@@ -115,7 +131,7 @@ export default function UserLinksPage() {
         const { data: linksData, error: linksError } = await supabase
           .from('social_links')
           .select('*')
-          .eq('nickname', username)
+          .eq('nickname', realUsername)
           .order('sort_order');
 
         if (linksError) {
@@ -143,17 +159,21 @@ export default function UserLinksPage() {
       }
     }
 
-    if (username) {
+    if (realUsername) {
       fetchUserData();
+    } else if (router.isReady) {
+      // If we're ready but no real username, show not found
+      setNotFound(true);
+      setLoading(false);
     }
-  }, [username]);
+  }, [realUsername, router.isReady]);
 
   // Show loading state
   if (loading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', flexDirection: 'column' }}>
         <CircularProgress sx={{ mb: 2 }} />
-        <Typography variant="body1">Loading {username}'s links...</Typography>
+        <Typography variant="body1">Loading {realUsername}'s links...</Typography>
       </Box>
     );
   }
@@ -184,7 +204,7 @@ export default function UserLinksPage() {
         <Box sx={{ textAlign: 'center', py: 10 }}>
           <Typography variant="h4" gutterBottom>Page not found</Typography>
           <Typography variant="body1" sx={{ mt: 2, mb: 4 }}>
-            The page for @{username} doesn't exist or hasn't been set up yet.
+            The page for @{realUsername || 'this user'} doesn't exist or hasn't been set up yet.
           </Typography>
           <Button 
             variant="contained" 
@@ -241,7 +261,7 @@ export default function UserLinksPage() {
         <meta property="og:title" content={`${formattedProfile.title} | Links`} />
         <meta property="og:description" content={formattedProfile.bio || `Check out ${formattedProfile.title}'s links`} />
         <meta property="og:type" content="website" />
-        <meta property="og:url" content={`https://creatorino.com/s/${username}`} />
+        <meta property="og:url" content={`https://creatorino.com/s/${realUsername}`} />
       </Head>
 
       <Box sx={{ 

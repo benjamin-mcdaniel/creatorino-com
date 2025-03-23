@@ -13,14 +13,14 @@ module.exports = {
     // Skip this during development
     if (dev) return defaultPathMap;
 
-    // Instead of trying to map /s to /s/[username], create a specific fallback page
+    // Create a paths map without the dynamic route
     const paths = { ...defaultPathMap };
     
-    // Remove the dynamic route from the export map
+    // Remove the dynamic route which can't be statically generated
     delete paths['/s/[username]'];
     
-    // Add a static page for a catch-all fallback
-    paths['/s/404'] = { page: '/s/[username]', query: { username: '404' } };
+    // Add a specific fallback page that will be used for all /s/* routes
+    paths['/s/fallback'] = { page: '/s/[username]', query: { username: 'fallback' } };
     
     return paths;
   },
