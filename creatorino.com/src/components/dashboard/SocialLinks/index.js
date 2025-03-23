@@ -96,7 +96,7 @@ export default function SocialLinksTab() {
             Social Links
           </Typography>
           <Typography variant="body1">
-            Manage your social media links and create a custom landing page for your audience.
+            Manage your social media links and create a custom landing page.
           </Typography>
         </Grid>
         <Grid item xs={12} md={4} sx={{ display: 'flex', justifyContent: 'flex-end' }}>
@@ -108,7 +108,7 @@ export default function SocialLinksTab() {
             startIcon={<VisibilityIcon />}
             sx={{ mr: 1 }}
           >
-            View Public Page
+            Preview
           </Button>
           <Button 
             variant="outlined" 
@@ -127,58 +127,10 @@ export default function SocialLinksTab() {
             color="info"
             size="small"
           >
-            {showDebugPanel ? 'Hide Debug' : 'Show Debug'}
+            {showDebugPanel ? 'Debug' : 'Debug'}
           </Button>
         </Grid>
       </Grid>
-
-      {/* Debug Panel (when toggled) */}
-      {showDebugPanel && (
-        <Paper sx={{ p: 2, mb: 3, bgcolor: '#f9f9f9', border: '1px solid #e0e0e0' }}>
-          <Typography variant="h6" gutterBottom>Debug Information</Typography>
-          <Grid container spacing={2}>
-            <Grid item xs={12} sm={6}>
-              <Typography variant="subtitle2">User:</Typography>
-              <Typography variant="body2" sx={{ mb: 1 }}>
-                ID: {user?.id || 'Not logged in'}
-              </Typography>
-              <Typography variant="subtitle2">Data Status:</Typography>
-              <Typography variant="body2" sx={{ mb: 1 }}>
-                Loading: {loading ? 'Yes' : 'No'}<br />
-                Links: {links ? links.length : 0} items<br />
-                Profile: {profile ? Object.keys(profile).length : 0} properties
-              </Typography>
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <Typography variant="subtitle2">Public URL:</Typography>
-              <Typography variant="body2" sx={{ mb: 1 }}>
-                {getPublicLinkUrl()}
-              </Typography>
-              <Typography variant="subtitle2">Theme:</Typography>
-              <Typography variant="body2" sx={{ mb: 1 }}>
-                {profile.themeId || 'default'} 
-                (Button style: {profile.button_style || 'rounded'})
-              </Typography>
-            </Grid>
-            <Grid item xs={12}>
-              <Box
-                component="pre"
-                sx={{
-                  p: 1,
-                  bgcolor: '#f0f0f0',
-                  borderRadius: 1,
-                  fontSize: '12px',
-                  maxHeight: 150,
-                  overflow: 'auto'
-                }}
-              >
-                {JSON.stringify({ profile, links: links?.slice(0, 2) }, null, 2)}
-                {links?.length > 2 ? '... (more links not shown)' : ''}
-              </Box>
-            </Grid>
-          </Grid>
-        </Paper>
-      )}
 
       {/* Main content section */}
       <Grid container spacing={3}>
@@ -635,6 +587,45 @@ export default function SocialLinksTab() {
           </Button>
         </DialogActions>
       </Dialog>
+      
+      {/* Debug Panel (as popup from bottom right) */}
+      {showDebugPanel && (
+        <Box sx={{ 
+          position: 'fixed', 
+          bottom: 20, 
+          right: 20, 
+          zIndex: 9999,
+          width: 600, 
+          maxWidth: '90vw',
+          maxHeight: '80vh',
+          boxShadow: 5,
+          transition: 'all 0.3s ease-in-out',
+          animation: 'slideIn 0.3s ease-out',
+          '@keyframes slideIn': {
+            '0%': {
+              transform: 'translateY(100%)',
+              opacity: 0
+            },
+            '100%': {
+              transform: 'translateY(0)',
+              opacity: 1
+            }
+          }
+        }}>
+          <DebugPanel 
+            user={user}
+            loading={loading}
+            authLoading={authLoading}
+            links={links}
+            profile={profile}
+            dialogOpen={dialogOpen}
+            refreshData={refreshData}
+            setOverrideLoading={setOverrideLoading}
+            showFullPageLoader={false}
+            isDebugPopup={true}
+          />
+        </Box>
+      )}
       
       {/* Notifications */}
       <Snackbar 

@@ -1,6 +1,7 @@
 // src/components/dashboard/SocialLinks/debug.js
 import React, { useState, useEffect } from 'react';
-import { Box, Button, Typography, Paper, Grid, Divider } from '@mui/material';
+import { Box, Button, Typography, Paper, Grid, Divider, IconButton } from '@mui/material';
+import CloseIcon from '@mui/icons-material/Close';
 import { FullPageLoader } from '../../common/LoadingState';
 import { supabase } from '../../../lib/supabaseClient';
 
@@ -12,7 +13,10 @@ export default function DebugPanel({
   profile, 
   dialogOpen,
   refreshData,
-  setOverrideLoading
+  setOverrideLoading,
+  showFullPageLoader = true,
+  isDebugPopup = false,
+  onClose = null
 }) {
   const [debugInfo, setDebugInfo] = useState({
     logs: [],
@@ -77,7 +81,7 @@ export default function DebugPanel({
   useEffect(() => {
     let timeoutId;
     
-    if (loading || authLoading) {
+    if ((loading || authLoading) && !isDebugPopup) {
       timeoutId = setTimeout(() => {
         addDebugLog('Loading timeout reached, forcing override');
         setOverrideLoading(true);
@@ -87,7 +91,7 @@ export default function DebugPanel({
     return () => {
       if (timeoutId) clearTimeout(timeoutId);
     };
-  }, [loading, authLoading, setOverrideLoading]);
+  }, [loading, authLoading, setOverrideLoading, isDebugPopup]);
 
   // Direct database check for debugging
   useEffect(() => {
@@ -244,18 +248,37 @@ export default function DebugPanel({
 
   return (
     <Box>
-      <FullPageLoader />
-      <Paper sx={{ position: 'fixed', bottom: 20, right: 20, p: 2, maxWidth: 600, zIndex: 9999, opacity: 0.9 }}>
+      {showFullPageLoader && !isDebugPopup && <FullPageLoader />}
+      <Paper sx={{ 
+        position: isDebugPopup ? 'relative' : 'fixed', 
+        bottom: isDebugPopup ? 'auto' : 20, 
+        right: isDebugPopup ? 'auto' : 20, 
+        p: 2, 
+        maxWidth: isDebugPopup ? '100%' : 600, 
+        width: isDebugPopup ? '100%' : 'auto',
+        zIndex: isDebugPopup ? 1 : 9999, 
+        opacity: 1,
+        maxHeight: isDebugPopup ? '80vh' : 'auto',
+        overflow: 'auto',
+        borderRadius: 2,
+        bgcolor: 'background.paper'
+      }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Typography variant="h6" gutterBottom>Debug Loading Info</Typography>
-          <Button 
-            variant="outlined" 
-            color="error" 
-            size="small"
-            onClick={forceLoadingOverride}
-          >
-            Override Loading
-          </Button>
+          <Typography variant="h6" gutterBottom>Debug</Typography>
+          {isDebugPopup && onClose ? (
+            <IconButton size="small" onClick={onClose} aria-label="close debug">
+              <CloseIcon fontSize="small" />
+            </IconButton>
+          ) : !isDebugPopup ? (
+            <Button 
+              variant="outlined" 
+              color="error" 
+              size="small"
+              onClick={forceLoadingOverride}
+            >
+              Override Loading
+            </Button>
+          ) : null}
         </Box>
         <Typography variant="body2">Auth Status: {debugInfo.authStatus}</Typography>
         <Typography variant="body2">Data Status: {debugInfo.dataStatus}</Typography>
