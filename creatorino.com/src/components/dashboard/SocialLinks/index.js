@@ -71,19 +71,35 @@ export default function SocialLinksTab() {
     setShowDebugPanel(prev => !prev);
   };
 
-  // Show debug panel during loading
+  // Completely separate loading debug panel from popup debug panel
+  // Make sure it's invisible until fully loaded
   if ((loading || authLoading) && !overrideLoading) {
     return (
-      <DebugPanel 
-        user={user}
-        loading={loading}
-        authLoading={authLoading}
-        links={links}
-        profile={profile}
-        dialogOpen={dialogOpen}
-        refreshData={refreshData}
-        setOverrideLoading={setOverrideLoading}
-      />
+      <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+        <FullPageLoader />
+        <Box sx={{ 
+          position: 'fixed', 
+          bottom: 20, 
+          right: 20, 
+          zIndex: 9999,
+          visibility: 'hidden',  // Start with hidden visibility
+          opacity: 0,  // Start with zero opacity
+          pointerEvents: 'none'  // Prevent any interaction before visible
+        }}>
+          <DebugPanel 
+            user={user}
+            loading={loading}
+            authLoading={authLoading}
+            links={links}
+            profile={profile}
+            dialogOpen={dialogOpen}
+            refreshData={refreshData}
+            setOverrideLoading={setOverrideLoading}
+            showFullPageLoader={false}  // Don't show another loader
+            isDebugPopup={false}  // Not a popup but a fixed panel
+          />
+        </Box>
+      </Box>
     );
   }
 
@@ -588,7 +604,7 @@ export default function SocialLinksTab() {
         </DialogActions>
       </Dialog>
       
-      {/* Debug Panel (as popup from bottom right) */}
+      {/* Debug Panel (as popup from bottom right) - ONLY shown when explicitly toggled */}
       {showDebugPanel && (
         <Box sx={{ 
           position: 'fixed', 
@@ -599,8 +615,11 @@ export default function SocialLinksTab() {
           maxWidth: '90vw',
           maxHeight: '80vh',
           boxShadow: 5,
-          transition: 'all 0.3s ease-in-out',
-          animation: 'slideIn 0.3s ease-out',
+          opacity: 1,
+          visibility: 'visible',
+          // Prevent any transition on initial render to avoid flash
+          transition: showDebugPanel ? 'all 0.3s ease-in-out' : 'none',
+          animation: showDebugPanel ? 'slideIn 0.3s ease-out' : 'none',
           '@keyframes slideIn': {
             '0%': {
               transform: 'translateY(100%)',
@@ -623,6 +642,7 @@ export default function SocialLinksTab() {
             setOverrideLoading={setOverrideLoading}
             showFullPageLoader={false}
             isDebugPopup={true}
+            onClose={toggleDebugPanel}
           />
         </Box>
       )}
