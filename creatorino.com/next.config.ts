@@ -1,21 +1,25 @@
-import { NextConfig } from 'next';
-
-const config: NextConfig = {
+// next.config.js
+module.exports = {
   // Use trailing slash to be consistent with server routing
   trailingSlash: true,
   
   // This is required for static exports with Cloudflare Pages
   output: 'export',
   
+  // Add this flag to ensure functions directory is included in the build
+  experimental: {
+    outputFileTracingRoot: __dirname,
+  },
+  
   // This enables SSG to handle any URL pattern for s/[username]
   async exportPathMap(defaultPathMap, { dev, dir, outDir, distDir, buildId }) {
     // Skip this during development
     if (dev) return defaultPathMap;
 
-    // Add a catch-all route for s/* that serves the username.js page
+    // Generate a static page for /s route
     return {
       ...defaultPathMap,
-      '/s/[username]': { page: '/s/[username]' },
+      '/s': { page: '/s/[username]' },
     };
   },
   
@@ -23,6 +27,4 @@ const config: NextConfig = {
   images: {
     unoptimized: true,
   },
-};
-
-export default config;
+}
