@@ -1,6 +1,7 @@
 // pages/_app.js
 import { ThemeProvider, CssBaseline } from '@mui/material';
 import { useEffect } from 'react';
+import { useRouter } from 'next/router';
 import Head from 'next/head';
 import { supabase } from '../lib/supabaseClient';
 import theme from '../utils/theme';
@@ -8,6 +9,8 @@ import CookieConsent from '../components/CookieConsent';
 import '../styles/globals.css'; // For Tailwind CSS
 
 function MyApp({ Component, pageProps }) {
+  const router = useRouter();
+  
   useEffect(() => {
     // Configure persistent session
     const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
@@ -57,7 +60,7 @@ function MyApp({ Component, pageProps }) {
     return () => {
       router.events.off('routeChangeComplete', logPageView);
     };
-  }, []);
+  }, [router]);
 
   return (
     <>
