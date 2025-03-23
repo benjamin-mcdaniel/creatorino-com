@@ -30,6 +30,7 @@ export default function SocialLinksTab() {
     loading,
     links, 
     profile, 
+    setProfile, // Add this line to get setProfile from the hook
     notification,
     dialogOpen,
     currentLink,

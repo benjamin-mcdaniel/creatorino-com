@@ -665,6 +665,7 @@ const useSocialLinksManager = (user) => {
     loading,
     links,
     profile,
+    setProfile, // Explicitly expose the setProfile function
     notification,
     dialogOpen,
     currentLink,
