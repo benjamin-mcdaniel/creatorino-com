@@ -26,104 +26,111 @@ const platformIcons = {
   default: <PublicIcon />
 };
 
-export default function PublicLinkPage() {
-  const router = useRouter();
-  const { username } = router.query;
+// This enables static generation for the paths we know about at build time
+export async function getStaticPaths() {
+  // Get all nicknames from profiles table to pre-generate pages
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('nickname')
+    .not('nickname', 'is', null);
+    
+  if (error || !data) {
+    console.error('Error fetching profiles for static paths:', error);
+    return {
+      paths: [],
+      fallback: 'blocking' // Use blocking to ensure page loads even for new users
+    };
+  }
   
-  const [loading, setLoading] = useState(true);
-  const [profile, setProfile] = useState(null);
-  const [links, setLinks] = useState([]);
-  const [notFound, setNotFound] = useState(false);
-  const [error, setError] = useState(null);
+  // Create paths for each nickname
+  const paths = data
+    .filter(profile => profile.nickname) // Only include profiles with nicknames
+    .map(profile => ({
+      params: { username: profile.nickname }
+    }));
+    
+  return {
+    paths,
+    fallback: 'blocking' // This ensures new users still work after build time
+  };
+}
+
+// This provides the data for each path - both at build time and on-demand
+export async function getStaticProps({ params }) {
+  const { username } = params;
   
-  useEffect(() => {
-    async function fetchData() {
-      if (!username) return;
+  try {
+    // First try to get user by nickname
+    let settings = null;
+    let links = [];
+    let profile = null;
+    
+    // Get the profile by nickname
+    const { data: profileData, error: profileError } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('nickname', username)
+      .single();
       
-      setLoading(true);
-      setError(null);
+    if (profileError) {
+      console.error('Error fetching profile:', profileError);
+    } else if (profileData) {
+      profile = profileData;
       
-      try {
-        console.log('Fetching data for username:', username);
+      // Find settings for this user
+      const { data: settingsData, error: settingsError } = await supabase
+        .from('social_links_settings')
+        .select('*')
+        .eq('user_id', profile.id)
+        .single();
         
-        // Directly query the social_links_settings table using the nickname field
-        const { data: settingsData, error: settingsError } = await supabase
-          .from('social_links_settings')
-          .select('*')
-          .eq('nickname', username)
-          .single();
-          
-        if (settingsError) {
-          console.error('Error finding settings:', settingsError);
-          if (settingsError.code === 'PGRST116') {
-            setNotFound(true);
-          } else {
-            setError(`Failed to fetch settings: ${settingsError.message}`);
-          }
-          setLoading(false);
-          return;
-        }
+      if (!settingsError && settingsData) {
+        settings = settingsData;
+      }
+      
+      // Get links by nickname
+      const { data: linksData, error: linksError } = await supabase
+        .from('social_links')
+        .select('*')
+        .eq('nickname', username)
+        .order('sort_order');
         
-        if (!settingsData) {
-          console.log('No settings found for username:', username);
-          setNotFound(true);
-          setLoading(false);
-          return;
-        }
-        
-        console.log('Found settings for:', username);
-        
-        // Format settings to match our component format
-        const formattedProfile = {
-          title: settingsData.title || 'Creator',
-          bio: settingsData.bio || '',
-          themeId: settingsData.theme_id || 'default',
-          button_style: settingsData.button_style || 'rounded',
-          font_family: settingsData.font_family || 'Inter',
-          background_type: settingsData.background_type || 'color',
-          background_value: settingsData.background_value || '#ffffff'
-        };
-        
-        setProfile(formattedProfile);
-        
-        // Query links directly by nickname (more efficient)
-        const { data: linksData, error: linksError } = await supabase
-          .from('social_links')
-          .select('*')
-          .eq('nickname', username)
-          .order('sort_order');
-          
-        if (linksError) {
-          console.error('Error fetching links:', linksError);
-          setError(`Failed to fetch links: ${linksError.message}`);
-        } else if (linksData && linksData.length > 0) {
-          console.log(`Found ${linksData.length} links`);
-          setLinks(linksData);
-        } else {
-          console.log('No links found');
-          setLinks([]);
-        }
-        
-        setLoading(false);
-      } catch (error) {
-        console.error('Error fetching public link page:', error);
-        setError('An unexpected error occurred. Please try again later.');
-        setNotFound(true);
-        setLoading(false);
+      if (!linksError && linksData) {
+        links = linksData;
       }
     }
     
-    if (username) {
-      fetchData();
+    // Return 404 if no profile or settings found
+    if (!profile || !settings) {
+      return {
+        notFound: true
+      };
     }
-  }, [username]);
+    
+    return {
+      props: {
+        profile,
+        settings,
+        links,
+        username
+      },
+      // Revalidate every hour to pick up new changes
+      revalidate: 3600
+    };
+  } catch (error) {
+    console.error('Error in getStaticProps:', error);
+    return {
+      notFound: true
+    };
+  }
+}
+
+// Your component using the props
+function UserLinksPage({ profile, settings, links, username }) {
+  const router = useRouter();
   
-  // Helper function to get icon
-  const getIcon = (platformKey) => {
-    return platformIcons[platformKey] || platformIcons.default;
-  };
-  
-  if (loading) {
+  // If the page is still generating, show a loading state
+  if (router.isFallback) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', flexDirection: 'column' }}>
         <CircularProgress sx={{ mb: 2 }} />
@@ -131,57 +138,35 @@ export default function PublicLinkPage() {
       </Box>
     );
   }
-  
-  if (error) {
-    return (
-      <Container maxWidth="sm">
-        <Box sx={{ textAlign: 'center', py: 10 }}>
-          <Alert severity="error" sx={{ mb: 4 }}>
-            {error}
-          </Alert>
-          <Button 
-            variant="contained" 
-            onClick={() => router.push('/')}
-          >
-            Go Home
-          </Button>
-        </Box>
-      </Container>
-    );
-  }
-  
-  if (notFound) {
-    return (
-      <Container maxWidth="sm">
-        <Box sx={{ textAlign: 'center', py: 10 }}>
-          <Typography variant="h4" gutterBottom>Page not found</Typography>
-          <Typography variant="body1" sx={{ mt: 2, mb: 4 }}>
-            The page for @{username} doesn't exist or hasn't been set up yet.
-          </Typography>
-          <Button 
-            variant="contained" 
-            onClick={() => router.push('/')}
-          >
-            Go Home
-          </Button>
-        </Box>
-      </Container>
-    );
-  }
+
+  // Format settings to match component expectations
+  const formattedProfile = {
+    title: settings.title || 'Creator',
+    bio: settings.bio || '',
+    themeId: settings.theme_id || 'default',
+    button_style: settings.button_style || 'rounded',
+    font_family: settings.font_family || 'Inter',
+    background_type: settings.background_type || 'color',
+    background_value: settings.background_value || '#ffffff'
+  };
   
   // Get the selected theme
-  const theme = COLOR_THEMES.find(t => t.id === profile.themeId) || COLOR_THEMES[0];
+  const theme = COLOR_THEMES.find(t => t.id === formattedProfile.themeId) || COLOR_THEMES[0];
+  
+  // Helper function to get icon for a platform
+  const getIcon = (platformKey) => {
+    return platformIcons[platformKey] || platformIcons.default;
+  };
   
   return (
     <>
       <Head>
-        <title>{profile.title} | Links</title>
-        <meta name="description" content={profile.bio || `Check out ${profile.title}'s links`} />
-        <meta property="og:title" content={`${profile.title} | Links`} />
-        <meta property="og:description" content={profile.bio || `Check out ${profile.title}'s links`} />
+        <title>{formattedProfile.title} | Links</title>
+        <meta name="description" content={formattedProfile.bio || `Check out ${formattedProfile.title}'s links`} />
+        <meta property="og:title" content={`${formattedProfile.title} | Links`} />
+        <meta property="og:description" content={formattedProfile.bio || `Check out ${formattedProfile.title}'s links`} />
         <meta property="og:type" content="website" />
         <meta property="og:url" content={`https://creatorino.com/s/${username}`} />
-        {/* You could generate dynamic OG images for better sharing experience */}
       </Head>
 
       <Box sx={{ 
@@ -201,7 +186,7 @@ export default function PublicLinkPage() {
           alignItems: 'center',
           py: 4
         }}>
-          {/* Avatar */}
+          {/* Profile Avatar */}
           <Avatar 
             sx={{ 
               width: 100, 
@@ -212,7 +197,7 @@ export default function PublicLinkPage() {
               color: theme.buttonTextColor
             }}
           >
-            {profile.title.charAt(0).toUpperCase()}
+            {formattedProfile.title.charAt(0).toUpperCase()}
           </Avatar>
           
           {/* Title */}
@@ -222,17 +207,17 @@ export default function PublicLinkPage() {
             gutterBottom
             sx={{ fontWeight: 'bold', color: theme.textColor }}
           >
-            {profile.title}
+            {formattedProfile.title}
           </Typography>
           
           {/* Bio */}
-          {profile.bio && (
+          {formattedProfile.bio && (
             <Typography 
               variant="body1" 
               align="center" 
               sx={{ mb: 4, color: theme.textColor, maxWidth: '90%' }}
             >
-              {profile.bio}
+              {formattedProfile.bio}
             </Typography>
           )}
           
@@ -258,8 +243,8 @@ export default function PublicLinkPage() {
                   sx={{
                     mb: 2,
                     p: 1.5,
-                    borderRadius: profile.button_style === 'rounded' ? '8px' : 
-                                profile.button_style === 'pill' ? '50px' : '0px',
+                    borderRadius: formattedProfile.button_style === 'rounded' ? '8px' : 
+                                formattedProfile.button_style === 'pill' ? '50px' : '0px',
                     backgroundColor: theme.buttonColor,
                     color: theme.buttonTextColor,
                     justifyContent: 'flex-start',
@@ -302,3 +287,5 @@ export default function PublicLinkPage() {
     </>
   );
 }
+
+export default UserLinksPage;
