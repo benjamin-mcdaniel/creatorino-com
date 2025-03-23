@@ -1,4 +1,3 @@
-// src/components/dashboard/SocialLinks/index.js
 import React, { useState, useEffect } from 'react';
 import { Box, Tabs, Tab, Button, Typography, Paper, Grid, Avatar, Dialog, DialogTitle, DialogContent, DialogActions, 
   TextField, FormControl, InputLabel, Select, MenuItem, Card, CardContent, Radio, RadioGroup, FormControlLabel, 
@@ -12,6 +11,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import BugReportIcon from '@mui/icons-material/BugReport';
+import SaveIcon from '@mui/icons-material/Save';
 import { FullPageLoader } from '../../common/LoadingState';
 import useAuth from '../../../lib/useAuth';
 import { COLOR_THEMES, PLATFORM_OPTIONS, getIcon, isValidUrl, ensureUrlProtocol } from './utils';
@@ -23,6 +23,7 @@ export default function SocialLinksTab() {
   const [activeSection, setActiveSection] = useState(0);
   const [overrideLoading, setOverrideLoading] = useState(false);
   const [showDebugPanel, setShowDebugPanel] = useState(false);
+  const [unsavedChanges, setUnsavedChanges] = useState(false);
   
   // Use the custom hook to manage social links functionality
   const { 
@@ -61,11 +62,34 @@ export default function SocialLinksTab() {
   
   const theme = getSelectedTheme();
 
+  // Check if we're in development mode
+  const isDevelopment = process.env.NODE_ENV === 'development';
+  
   // Handle manual refresh - This is the reliable method that also creates default data if none exists
   const handleRefresh = async () => {
     console.log('Manual refresh requested - will initialize if needed');
     await refreshData(); // This runs the full initialization + data loading
     console.log('Manual refresh completed, links:', links.length);
+  };
+  
+  // Save profile settings
+  const handleSaveSettings = async () => {
+    console.log('Saving profile settings...');
+    await updateProfile(profile);
+    setUnsavedChanges(false);
+  };
+
+  // Modified profile change handler to track unsaved changes instead of auto-saving
+  const handleProfileChangeWithoutSave = (e) => {
+    const { name, value } = e.target;
+    setProfile(prev => ({...prev, [name]: value}));
+    setUnsavedChanges(true);
+  };
+
+  // Handle theme selection without auto-saving
+  const handleThemeSelection = (themeId) => {
+    setProfile(prev => ({...prev, themeId}));
+    setUnsavedChanges(true);
   };
 
   // Component first load - if no links found, trigger full refresh
@@ -126,6 +150,19 @@ export default function SocialLinksTab() {
           </Typography>
         </Grid>
         <Grid item xs={12} md={4} sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+          {unsavedChanges && (
+            <Button 
+              variant="contained" 
+              onClick={handleSaveSettings}
+              startIcon={<SaveIcon />}
+              color="primary"
+              sx={{ mr: 1 }}
+            >
+              Save
+            </Button>
+          )}
+          
+          {/* Preview button - show in all environments */}
           <Button 
             variant="outlined" 
             component="a"
@@ -136,25 +173,31 @@ export default function SocialLinksTab() {
           >
             Preview
           </Button>
-          <Button 
-            variant="outlined" 
-            onClick={handleRefresh}
-            startIcon={<RefreshIcon />}
-            color="secondary"
-            size="small"
-            sx={{ mr: 1 }}
-          >
-            Refresh
-          </Button>
-          <Button
-            variant="outlined"
-            onClick={toggleDebugPanel}
-            startIcon={<BugReportIcon />}
-            color="info"
-            size="small"
-          >
-            {showDebugPanel ? 'Debug' : 'Debug'}
-          </Button>
+          
+          {/* Development-only buttons */}
+          {isDevelopment && (
+            <>
+              <Button 
+                variant="outlined" 
+                onClick={handleRefresh}
+                startIcon={<RefreshIcon />}
+                color="secondary"
+                size="small"
+                sx={{ mr: 1 }}
+              >
+                Refresh
+              </Button>
+              <Button
+                variant="outlined"
+                onClick={toggleDebugPanel}
+                startIcon={<BugReportIcon />}
+                color="info"
+                size="small"
+              >
+                Debug
+              </Button>
+            </>
+          )}
         </Grid>
       </Grid>
 
@@ -321,7 +364,17 @@ export default function SocialLinksTab() {
           {/* Customize Theme Section */}
           <Box sx={{ display: activeSection === 1 ? 'block' : 'none' }}>
             <Paper sx={{ p: 3, mb: 3 }}>
-              <Typography variant="h6" gutterBottom>Customize Your Page</Typography>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                <Typography variant="h6" gutterBottom>Customize Your Page</Typography>
+                <Button 
+                  variant="contained" 
+                  onClick={handleSaveSettings}
+                  disabled={!unsavedChanges}
+                  size="small"
+                >
+                  Save Changes
+                </Button>
+              </Box>
               
               <TextField
                 fullWidth
@@ -329,7 +382,7 @@ export default function SocialLinksTab() {
                 name="title"
                 label="Your Name/Title"
                 value={profile.title || ''}
-                onChange={handleProfileChange}
+                onChange={handleProfileChangeWithoutSave}
                 placeholder="Your Name or Brand"
               />
               
@@ -339,7 +392,7 @@ export default function SocialLinksTab() {
                 name="bio"
                 label="Bio"
                 value={profile.bio || ''}
-                onChange={handleProfileChange}
+                onChange={handleProfileChangeWithoutSave}
                 multiline
                 rows={2}
                 placeholder="Tell visitors a bit about yourself..."
@@ -351,7 +404,7 @@ export default function SocialLinksTab() {
                   row
                   name="themeId" 
                   value={profile.themeId || 'default'}
-                  onChange={handleProfileChange}
+                  onChange={handleProfileChangeWithoutSave}
                 >
                   <Grid container spacing={2}>
                     {COLOR_THEMES.map(theme => (
@@ -363,7 +416,7 @@ export default function SocialLinksTab() {
                             borderColor: theme.id === (profile.themeId || 'default') ? 'primary.main' : 'divider',
                             height: '100%'
                           }}
-                          onClick={() => updateProfile({ themeId: theme.id })}
+                          onClick={() => handleThemeSelection(theme.id)}
                         >
                           <Box sx={{ 
                             height: 60, 
@@ -404,7 +457,7 @@ export default function SocialLinksTab() {
                   <Select
                     name="button_style"
                     value={profile.button_style || 'rounded'}
-                    onChange={handleProfileChange}
+                    onChange={handleProfileChangeWithoutSave}
                     label="Button Style"
                   >
                     <MenuItem value="rounded">Rounded</MenuItem>
@@ -625,7 +678,7 @@ export default function SocialLinksTab() {
       </Dialog>
       
       {/* Debug Panel (as popup from bottom right) - ONLY shown when explicitly toggled */}
-      {showDebugPanel && (
+      {isDevelopment && showDebugPanel && (
         <Box sx={{ 
           position: 'fixed', 
           bottom: 20, 

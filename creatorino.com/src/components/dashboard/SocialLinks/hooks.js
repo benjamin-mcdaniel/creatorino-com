@@ -479,13 +479,12 @@ const useSocialLinksManager = (user) => {
   }, [showNotification]);
   
   /**
-   * Update profile settings
-   * @param {Object} newData - New profile data
+   * Update profile settings - now with explicit call rather than auto-save
+   * @param {Object} newData - New profile data or entire profile object
    */
   const updateProfile = useCallback(async (newData) => {
     try {
       console.log('Updating profile settings:', newData);
-      setProfile(prev => ({...prev, ...newData}));
       
       if (!userRef.current) {
         return;
