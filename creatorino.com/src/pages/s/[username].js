@@ -26,14 +26,15 @@ const platformIcons = {
   default: <PublicIcon />
 };
 
-// Instead of getStaticPaths and getStaticProps, we'll use a pure client-side approach
-// for Cloudflare Pages compatibility
+// Add getInitialProps to make this page compatible with static exports
+// By adding this, we ensure Next.js doesn't auto-export the page, 
+// allowing us to handle everything client-side
+UserLinksPage.getInitialProps = async () => {
+  return {}; // Empty props, all data is fetched client-side
+};
 
+// Pure client-side approach for Cloudflare Pages compatibility
 export default function UserLinksPage() {
-  // Get the username from the URL
-  const router = useRouter();
-  const { username: queryUsername } = router.query;
-
   // State for client-side data
   const [profile, setProfile] = useState(null);
   const [settings, setSettings] = useState(null);
@@ -41,7 +42,8 @@ export default function UserLinksPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [notFound, setNotFound] = useState(false);
-  const [realUsername, setRealUsername] = useState(null);
+  const [username, setUsername] = useState(null);
+  const router = useRouter();
 
   // Extract username from URL path (this is key for Cloudflare Pages static hosting)
   useEffect(() => {
@@ -49,37 +51,42 @@ export default function UserLinksPage() {
       const pathParts = window.location.pathname.split('/');
       if (pathParts.length > 2) {
         const pathUsername = pathParts[2].replace(/\/$/, ''); // Remove trailing slash if present
-        setRealUsername(pathUsername);
-      } else if (queryUsername && queryUsername !== 'fallback') {
-        setRealUsername(queryUsername);
+        if (pathUsername !== 'fallback') {
+          setUsername(pathUsername);
+        } else {
+          // If we're on the actual fallback page URL (not redirected), show not found
+          setNotFound(true);
+          setLoading(false);
+        }
+      } else {
+        setNotFound(true);
+        setLoading(false);
       }
-    } else if (queryUsername && queryUsername !== 'fallback') {
-      setRealUsername(queryUsername);
     }
-  }, [queryUsername, router.isReady]);
+  }, []);
 
   // Fetch data on client side when username is available
   useEffect(() => {
     async function fetchUserData() {
-      if (!realUsername || realUsername === 'fallback') return;
+      if (!username) return;
       
       setLoading(true);
       setError(null);
       setNotFound(false);
 
       try {
-        console.log('[UserLinksPage] Fetching data for username:', realUsername);
+        console.log('[UserLinksPage] Fetching data for username:', username);
 
         // First get the profile by nickname
         const { data: profileData, error: profileError } = await supabase
           .from('profiles')
           .select('*')
-          .eq('nickname', realUsername)
+          .eq('nickname', username)
           .single();
 
         if (profileError) {
           console.error('[UserLinksPage] Profile error:', profileError.code, profileError.message, profileError);
-          logSupabaseError('Fetching profile', profileError, { username: realUsername });
+          logSupabaseError('Fetching profile', profileError, { username });
           if (profileError.code === 'PGRST116') {
             // No results found
             setNotFound(true);
@@ -91,14 +98,14 @@ export default function UserLinksPage() {
         }
 
         if (!profileData) {
-          console.log('No profile found for username:', realUsername);
+          console.log('No profile found for username:', username);
           setNotFound(true);
           setLoading(false);
           return;
         }
 
         setProfile(profileData);
-        console.log('Found profile for:', realUsername);
+        console.log('Found profile for:', username);
 
         // Get settings for this user
         const { data: settingsData, error: settingsError } = await supabase
@@ -131,7 +138,7 @@ export default function UserLinksPage() {
         const { data: linksData, error: linksError } = await supabase
           .from('social_links')
           .select('*')
-          .eq('nickname', realUsername)
+          .eq('nickname', username)
           .order('sort_order');
 
         if (linksError) {
@@ -159,21 +166,17 @@ export default function UserLinksPage() {
       }
     }
 
-    if (realUsername) {
+    if (username) {
       fetchUserData();
-    } else if (router.isReady) {
-      // If we're ready but no real username, show not found
-      setNotFound(true);
-      setLoading(false);
     }
-  }, [realUsername, router.isReady]);
+  }, [username]);
 
   // Show loading state
   if (loading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', flexDirection: 'column' }}>
         <CircularProgress sx={{ mb: 2 }} />
-        <Typography variant="body1">Loading {realUsername}'s links...</Typography>
+        <Typography variant="body1">Loading {username}'s links...</Typography>
       </Box>
     );
   }
@@ -204,7 +207,7 @@ export default function UserLinksPage() {
         <Box sx={{ textAlign: 'center', py: 10 }}>
           <Typography variant="h4" gutterBottom>Page not found</Typography>
           <Typography variant="body1" sx={{ mt: 2, mb: 4 }}>
-            The page for @{realUsername || 'this user'} doesn't exist or hasn't been set up yet.
+            The page for @{username || 'this user'} doesn't exist or hasn't been set up yet.
           </Typography>
           <Button 
             variant="contained" 
@@ -261,7 +264,7 @@ export default function UserLinksPage() {
         <meta property="og:title" content={`${formattedProfile.title} | Links`} />
         <meta property="og:description" content={formattedProfile.bio || `Check out ${formattedProfile.title}'s links`} />
         <meta property="og:type" content="website" />
-        <meta property="og:url" content={`https://creatorino.com/s/${realUsername}`} />
+        <meta property="og:url" content={`https://creatorino.com/s/${username}`} />
       </Head>
 
       <Box sx={{ 

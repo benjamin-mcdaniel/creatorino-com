@@ -19,8 +19,8 @@ module.exports = {
     // Remove the dynamic route which can't be statically generated
     delete paths['/s/[username]'];
     
-    // Add a specific fallback page that will be used for all /s/* routes
-    paths['/s/fallback'] = { page: '/s/[username]', query: { username: 'fallback' } };
+    // Add a static page for a catch-all fallback WITHOUT query parameters
+    paths['/s/fallback'] = { page: '/s/[username]' };
     
     return paths;
   },
