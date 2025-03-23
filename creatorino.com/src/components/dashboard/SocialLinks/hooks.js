@@ -151,18 +151,50 @@ const useSocialLinksManager = (user) => {
         }
       }
       
-      // Check if links already exist
-      const { data: existingLinks, error: linksCheckError } = await supabase
-        .from('social_links')
-        .select('id')
-        .eq('user_id', userRef.current.id)
-        .maybeSingle();
-        
-      if (linksCheckError && linksCheckError.code !== 'PGRST116') {
-        console.error('Error checking links:', linksCheckError);
+      // Check if links already exist - IMPROVED to match the working nickname check approach
+      let existingLinks = [];
+      let hasLinks = false;
+      
+      // First check by nickname (similar to the working fetch approach)
+      if (nickname) {
+        console.log('Checking for links by nickname:', nickname);
+        const { data: nicknameLinks, error: nicknameLinksError } = await supabase
+          .from('social_links')
+          .select('id')
+          .eq('nickname', nickname)
+          .limit(1);
+          
+        if (nicknameLinksError) {
+          console.error('Error checking links by nickname:', nicknameLinksError);
+        } else if (nicknameLinks && nicknameLinks.length > 0) {
+          existingLinks = nicknameLinks;
+          hasLinks = true;
+          console.log('Found existing links by nickname');
+        } else {
+          console.log('No links found by nickname');
+        }
       }
       
-      const hasLinks = !!existingLinks;
+      // If no links found by nickname, check by user_id as fallback
+      if (!hasLinks) {
+        console.log('Checking for links by user_id (fallback)');
+        const { data: userLinks, error: userLinksError } = await supabase
+          .from('social_links')
+          .select('id')
+          .eq('user_id', userRef.current.id)
+          .limit(1);
+          
+        if (userLinksError) {
+          console.error('Error checking links by user_id:', userLinksError);
+        } else if (userLinks && userLinks.length > 0) {
+          existingLinks = userLinks;
+          hasLinks = true;
+          console.log('Found existing links by user_id');
+        } else {
+          console.log('No links found by user_id');
+        }
+      }
+      
       console.log('User has existing links:', hasLinks);
       
       // Create a default link if none exist
@@ -253,12 +285,11 @@ const useSocialLinksManager = (user) => {
         }));
       }
       
-      // Fetch links by nickname if available
-      let fetchedLinks = [];
+      // IMPROVED: Direct query by nickname which is shown to be working in the debug logs
       if (nickname) {
-        console.log('Fetching links by nickname:', nickname);
+        console.log('Fetching links by nickname (reliable method):', nickname);
         
-        // Wait for the links to load
+        // This is the query shown as working in the debug logs
         const { data: nicknameLinks, error: nicknameError } = await supabase
           .from('social_links')
           .select('*')
@@ -267,45 +298,39 @@ const useSocialLinksManager = (user) => {
           
         if (nicknameError) {
           console.error('Error fetching links by nickname:', nicknameError);
+          // Don't throw here, try the fallback instead
         } else if (nicknameLinks && nicknameLinks.length > 0) {
           console.log(`Found ${nicknameLinks.length} links by nickname`);
-          fetchedLinks = nicknameLinks;
+          // This is the working part - directly set the links from the successful query
+          setLinks(nicknameLinks);
+          return; // Exit early on success
         } else {
           console.log('No links found by nickname');
         }
       }
       
-      // If no links found by nickname, try by user_id
-      if (fetchedLinks.length === 0) {
-        console.log('Fetching links by user_id');
-        const { data: userLinks, error: userLinksError } = await supabase
-          .from('social_links')
-          .select('*')
-          .eq('user_id', userRef.current.id)
-          .order('sort_order');
-          
-        if (userLinksError) {
-          console.error('Error fetching links by user_id:', userLinksError);
-          throw userLinksError;
-        } else if (userLinks && userLinks.length > 0) {
-          console.log(`Found ${userLinks.length} links by user_id`);
-          fetchedLinks = userLinks;
-        } else {
-          console.log('No links found by user_id');
-        }
+      // Fallback to user_id only if nickname query fails or returns no results
+      console.log('Fetching links by user_id (fallback)');
+      const { data: userLinks, error: userLinksError } = await supabase
+        .from('social_links')
+        .select('*')
+        .eq('user_id', userRef.current.id)
+        .order('sort_order');
+        
+      if (userLinksError) {
+        console.error('Error fetching links by user_id:', userLinksError);
+        throw userLinksError;
+      } else if (userLinks && userLinks.length > 0) {
+        console.log(`Found ${userLinks.length} links by user_id`);
+        setLinks(userLinks);
+      } else {
+        console.log('No links found by user_id, setting empty array');
+        setLinks([]);
       }
-      
-      // Update state with found links
-      console.log('Setting links state:', fetchedLinks);
-      setLinks(fetchedLinks);
-      
-      // Ensure we have links before setting loading to false
-      // Short delay to ensure state updates are processed
-      await new Promise(resolve => setTimeout(resolve, 100));
       
     } catch (error) {
       console.error('Error fetching user data:', error);
-      throw error; // Re-throw error to propagate to caller
+      throw error;
     }
   }, []);
 
@@ -573,12 +598,12 @@ const useSocialLinksManager = (user) => {
   }, [currentLink, formData, addLink, updateLink]);
   
   /**
-   * Force refresh the data
+   * Force refresh the data - Full refresh that includes initialization
    */
   const refreshData = useCallback(async () => {
     setLoading(true);
     try {
-      await initializeSettings();
+      await initializeSettings(); // This creates default data if none exists
       await fetchUserData();
       showNotification('Data refreshed successfully');
     } catch (error) {
@@ -589,7 +614,20 @@ const useSocialLinksManager = (user) => {
     }
   }, [initializeSettings, fetchUserData, showNotification]);
 
-  // Initialize on component mount - FIXED to use async/await pattern
+  /**
+   * Load data without initializing (for regular page loads)
+   * This avoids creating default data on every page load
+   */
+  const loadDataOnly = useCallback(async () => {
+    try {
+      await fetchUserData();
+    } catch (error) {
+      console.error('Error loading data:', error);
+      throw error;
+    }
+  }, [fetchUserData]);
+
+  // Initialize on component mount - Skip initializeSettings during normal loads
   useEffect(() => {
     const loadData = async () => {
       if (!userRef.current) {
@@ -599,11 +637,9 @@ const useSocialLinksManager = (user) => {
       
       setLoading(true);
       try {
-        console.log('Component mounted, initializing...');
-        await initializeSettings();
-        console.log('Initialization complete, fetching data...');
-        await fetchUserData();
-        console.log('Data loading complete');
+        console.log('Component mounted, loading data without initialization...');
+        await loadDataOnly(); // Use the method that doesn't call initializeSettings
+        console.log('Initial data load complete');
       } catch (error) {
         console.error('Error in initialization process:', error);
         showNotification('Error loading data. Please try refreshing.', 'error');
@@ -613,7 +649,7 @@ const useSocialLinksManager = (user) => {
     };
     
     loadData();
-  }, [initializeSettings, fetchUserData, showNotification]);
+  }, [loadDataOnly, showNotification]); // Changed to depend on loadDataOnly instead
 
   // This additional effect runs when any dependencies change and makes sure we refresh data
   // when necessary (important for re-fetching links after adding the first one)

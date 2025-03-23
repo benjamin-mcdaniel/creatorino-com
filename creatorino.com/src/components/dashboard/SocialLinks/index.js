@@ -1,5 +1,5 @@
 // src/components/dashboard/SocialLinks/index.js
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Box, Tabs, Tab, Button, Typography, Paper, Grid, Avatar, Dialog, DialogTitle, DialogContent, DialogActions, 
   TextField, FormControl, InputLabel, Select, MenuItem, Card, CardContent, Radio, RadioGroup, FormControlLabel, 
   Snackbar, Alert, IconButton } from '@mui/material';
@@ -61,10 +61,20 @@ export default function SocialLinksTab() {
   
   const theme = getSelectedTheme();
 
-  // Handle manual refresh
+  // Handle manual refresh - This is the reliable method that also creates default data if none exists
   const handleRefresh = async () => {
-    await refreshData();
+    console.log('Manual refresh requested - will initialize if needed');
+    await refreshData(); // This runs the full initialization + data loading
+    console.log('Manual refresh completed, links:', links.length);
   };
+
+  // Component first load - if no links found, trigger full refresh
+  useEffect(() => {
+    if (links.length === 0 && !loading && !authLoading) {
+      console.log('No links found on load, triggering full refresh with initialization');
+      handleRefresh();
+    }
+  }, [links.length, loading, authLoading]);
 
   // Toggle debug panel
   const toggleDebugPanel = () => {
@@ -215,6 +225,7 @@ export default function SocialLinksTab() {
                       </Box>
                     </Box>
                     <Box component="tbody">
+                      {console.log('Rendering links in table:', links ? links.length : 0)}
                       {links.map((link, index) => (
                         <Box 
                           component="tr" 
@@ -292,6 +303,15 @@ export default function SocialLinksTab() {
                     onClick={handleAddNew}
                   >
                     Add Your First Link
+                  </Button>
+                  <Button
+                    variant="text"
+                    size="small"
+                    onClick={handleRefresh} // This will initialize settings and create default links if needed
+                    startIcon={<RefreshIcon />}
+                    sx={{ mt: 2, display: 'block', mx: 'auto' }}
+                  >
+                    Refresh Links
                   </Button>
                 </Paper>
               )}
