@@ -26,36 +26,34 @@ const platformIcons = {
   default: <PublicIcon />
 };
 
-// This enables static generation for the paths we know about at build time
+// Switched to getStaticPaths with fallback: true for better Cloudflare Pages compatibility
 export async function getStaticPaths() {
-  // Get all nicknames from profiles table to pre-generate pages
+  // Only pre-render the most popular profiles at build time to keep build times reasonable
   const { data, error } = await supabase
     .from('profiles')
     .select('nickname')
-    .not('nickname', 'is', null);
+    .not('nickname', 'is', null)
+    .limit(50); // Limit to 50 most recently updated profiles for build time
     
   if (error || !data) {
-    console.error('Error fetching profiles for static paths:', error);
     return {
       paths: [],
-      fallback: 'blocking' // Use blocking to ensure page loads even for new users
+      fallback: true // Changed to true instead of 'blocking'
     };
   }
   
-  // Create paths for each nickname
   const paths = data
-    .filter(profile => profile.nickname) // Only include profiles with nicknames
+    .filter(profile => profile.nickname)
     .map(profile => ({
       params: { username: profile.nickname }
     }));
     
   return {
     paths,
-    fallback: 'blocking' // This ensures new users still work after build time
+    fallback: true // Client-side rendering for paths not generated at build time
   };
 }
 
-// This provides the data for each path - both at build time and on-demand
 export async function getStaticProps({ params }) {
   const { username } = params;
   
@@ -72,39 +70,36 @@ export async function getStaticProps({ params }) {
       .eq('nickname', username)
       .single();
       
-    if (profileError) {
-      console.error('Error fetching profile:', profileError);
-    } else if (profileData) {
-      profile = profileData;
-      
-      // Find settings for this user
-      const { data: settingsData, error: settingsError } = await supabase
-        .from('social_links_settings')
-        .select('*')
-        .eq('user_id', profile.id)
-        .single();
-        
-      if (!settingsError && settingsData) {
-        settings = settingsData;
-      }
-      
-      // Get links by nickname
-      const { data: linksData, error: linksError } = await supabase
-        .from('social_links')
-        .select('*')
-        .eq('nickname', username)
-        .order('sort_order');
-        
-      if (!linksError && linksData) {
-        links = linksData;
-      }
+    if (profileError || !profileData) {
+      // Return notFound for 404 handling
+      return { notFound: true };
     }
     
-    // Return 404 if no profile or settings found
-    if (!profile || !settings) {
-      return {
-        notFound: true
-      };
+    profile = profileData;
+      
+    // Find settings for this user
+    const { data: settingsData, error: settingsError } = await supabase
+      .from('social_links_settings')
+      .select('*')
+      .eq('user_id', profile.id)
+      .single();
+      
+    if (!settingsError && settingsData) {
+      settings = settingsData;
+    } else {
+      // No settings found - return 404
+      return { notFound: true };
+    }
+    
+    // Get links by nickname
+    const { data: linksData } = await supabase
+      .from('social_links')
+      .select('*')
+      .eq('nickname', username)
+      .order('sort_order');
+      
+    if (linksData) {
+      links = linksData;
     }
     
     return {
@@ -114,40 +109,147 @@ export async function getStaticProps({ params }) {
         links,
         username
       },
-      // Revalidate every hour to pick up new changes
-      revalidate: 3600
+      revalidate: 60 // Revalidate every minute for frequently updated content
     };
   } catch (error) {
     console.error('Error in getStaticProps:', error);
-    return {
-      notFound: true
-    };
+    return { notFound: true };
   }
 }
 
-// Your component using the props
-function UserLinksPage({ profile, settings, links, username }) {
+export default function UserLinksPage({ profile, settings, links, username }) {
   const router = useRouter();
-  
-  // If the page is still generating, show a loading state
-  if (router.isFallback) {
+  const [clientLinks, setClientLinks] = useState(links || []);
+  const [clientSettings, setClientSettings] = useState(settings);
+  const [clientProfile, setClientProfile] = useState(profile);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  // Handle fallback state for client-side rendering when the page isn't pre-generated
+  useEffect(() => {
+    // Skip if static props are already provided or router.isFallback is still true
+    if ((profile && settings) || router.isFallback) {
+      return;
+    }
+
+    // If we get here, it means we need to fetch data client-side
+    async function fetchUserData() {
+      if (!router.query.username) return;
+      
+      const username = router.query.username;
+      setLoading(true);
+      setError(null);
+      
+      try {
+        // Get the profile by nickname
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('nickname', username)
+          .single();
+          
+        if (profileError || !profileData) {
+          router.push('/404');
+          return;
+        }
+        
+        setClientProfile(profileData);
+        
+        // Find settings for this user
+        const { data: settingsData, error: settingsError } = await supabase
+          .from('social_links_settings')
+          .select('*')
+          .eq('user_id', profileData.id)
+          .single();
+          
+        if (settingsError || !settingsData) {
+          router.push('/404');
+          return;
+        }
+        
+        setClientSettings(settingsData);
+        
+        // Get links by nickname
+        const { data: linksData } = await supabase
+          .from('social_links')
+          .select('*')
+          .eq('nickname', username)
+          .order('sort_order');
+          
+        if (linksData) {
+          setClientLinks(linksData);
+        }
+      } catch (err) {
+        console.error('Error fetching user data:', err);
+        setError('Failed to load user profile');
+      } finally {
+        setLoading(false);
+      }
+    }
+    
+    fetchUserData();
+  }, [router, profile, settings]);
+
+  // If the page is in the fallback state, show a loading indicator
+  if (router.isFallback || loading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', flexDirection: 'column' }}>
         <CircularProgress sx={{ mb: 2 }} />
-        <Typography variant="body1">Loading {username}'s links...</Typography>
+        <Typography variant="body1">Loading profile...</Typography>
       </Box>
+    );
+  }
+
+  // Show error if something went wrong during client-side data fetching
+  if (error) {
+    return (
+      <Container maxWidth="sm">
+        <Box sx={{ textAlign: 'center', py: 10 }}>
+          <Alert severity="error" sx={{ mb: 4 }}>
+            {error}
+          </Alert>
+          <Button 
+            variant="contained" 
+            onClick={() => router.push('/')}
+          >
+            Go Home
+          </Button>
+        </Box>
+      </Container>
+    );
+  }
+
+  // Use either the server-side or client-side data
+  const actualProfile = clientProfile || profile;
+  const actualSettings = clientSettings || settings;
+  const actualLinks = clientLinks || links || [];
+  
+  if (!actualProfile || !actualSettings) {
+    // This is a fallback in case something went wrong but didn't trigger an error
+    return (
+      <Container maxWidth="sm">
+        <Box sx={{ textAlign: 'center', py: 10 }}>
+          <Typography variant="h4" gutterBottom>Profile not found</Typography>
+          <Button 
+            variant="contained" 
+            onClick={() => router.push('/')}
+          >
+            Go Home
+          </Button>
+        </Box>
+      </Container>
     );
   }
 
   // Format settings to match component expectations
   const formattedProfile = {
-    title: settings.title || 'Creator',
-    bio: settings.bio || '',
-    themeId: settings.theme_id || 'default',
-    button_style: settings.button_style || 'rounded',
-    font_family: settings.font_family || 'Inter',
-    background_type: settings.background_type || 'color',
-    background_value: settings.background_value || '#ffffff'
+    title: actualSettings.title || 'Creator',
+    bio: actualSettings.bio || '',
+    themeId: actualSettings.theme_id || 'default',
+    button_style: actualSettings.button_style || 'rounded',
+    font_family: actualSettings.font_family || 'Inter',
+    background_type: actualSettings.background_type || 'color',
+    background_value: actualSettings.background_value || '#ffffff'
   };
   
   // Get the selected theme
@@ -166,7 +268,7 @@ function UserLinksPage({ profile, settings, links, username }) {
         <meta property="og:title" content={`${formattedProfile.title} | Links`} />
         <meta property="og:description" content={formattedProfile.bio || `Check out ${formattedProfile.title}'s links`} />
         <meta property="og:type" content="website" />
-        <meta property="og:url" content={`https://creatorino.com/s/${username}`} />
+        <meta property="og:url" content={`https://creatorino.com/s/${router.query.username}`} />
       </Head>
 
       <Box sx={{ 
@@ -223,8 +325,8 @@ function UserLinksPage({ profile, settings, links, username }) {
           
           {/* Links */}
           <Box sx={{ width: '100%', mt: 2 }}>
-            {links.length > 0 ? (
-              links.map(link => (
+            {actualLinks.length > 0 ? (
+              actualLinks.map(link => (
                 <Button
                   key={link.id}
                   component="a"
@@ -287,5 +389,3 @@ function UserLinksPage({ profile, settings, links, username }) {
     </>
   );
 }
-
-export default UserLinksPage;
