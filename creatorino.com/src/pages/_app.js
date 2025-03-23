@@ -33,6 +33,32 @@ function MyApp({ Component, pageProps }) {
     };
   }, []);
 
+  useEffect(() => {
+    // Log page views for monitoring
+    const logPageView = () => {
+      const path = window.location.pathname;
+      console.log(`Page viewed: ${path}`);
+      
+      // If this is a username page, add extra logging
+      if (path.startsWith('/s/')) {
+        const username = path.split('/')[2];
+        console.log(`Social links page for user: ${username}`);
+        
+        // You could also send this data to an analytics endpoint
+        // or add custom logging to Supabase if needed
+      }
+    };
+    
+    // Log on initial load
+    logPageView();
+    
+    // Set up router change logging for SPA navigation
+    router.events.on('routeChangeComplete', logPageView);
+    return () => {
+      router.events.off('routeChangeComplete', logPageView);
+    };
+  }, []);
+
   return (
     <>
       <Head>
