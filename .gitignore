@@ -1,4 +1,6 @@
 
 # env files
 .env*
+*/.env*
 .vscodecounter
+.dev.vars
