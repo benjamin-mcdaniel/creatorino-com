@@ -13,10 +13,8 @@ workers_dev = true
 SUPABASE_URL = ""
 SUPABASE_KEY = ""
 
-# Module format for importing
+# Remove the redundant build.upload configuration
+# The error says: "Don't define both the `main` and `build.upload.main` fields"
 [build]
 command = ""
-[build.upload]
-format = "modules"
-main = "./index.js"
 
