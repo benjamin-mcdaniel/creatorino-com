@@ -15,7 +15,7 @@ import { errorResponse } from './common/utils.js';
 /**
  * Main request handler for the worker
  */
-async function handleRequest(request) {
+async function handleRequest(request, env, ctx) {
   const url = new URL(request.url);
   const path = url.pathname;
   
@@ -36,17 +36,19 @@ async function handleRequest(request) {
   
   // Route to the appropriate feature handler based on path
   if (path.startsWith('/profile')) {
-    return profileApi.handleRequest(request);
+    return profileApi.handleRequest(request, env, ctx);
   } 
   else if (path.startsWith('/youtube')) {
-    return youtubeApi.handleRequest(request);
+    return youtubeApi.handleRequest(request, env, ctx);
   }
   
   // Default response for unmatched routes
   return errorResponse('Not found', 404);
 }
 
-// Event listener for fetch events
-addEventListener('fetch', (event) => {
-  event.respondWith(handleRequest(event.request));
-});
+// Export an object with a fetch method (module format)
+export default {
+  async fetch(request, env, ctx) {
+    return handleRequest(request, env, ctx);
+  }
+};
