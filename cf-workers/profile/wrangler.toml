@@ -1,0 +1,13 @@
+name = "profile-api" 
+main = "index.js"
+compatibility_date = "2023-09-01"
+account_id = "5267338e6e637da4f95322d02fba6025" # Add your Cloudflare account ID here
+workers_dev = true
+route = "profile-api.benjamin-f-mcdaniel.workers.dev/*"
+
+# Environment variables are configured in .dev.vars during development
+# and in the Cloudflare Dashboard for production
+[vars]
+# These will be overridden by secrets with the same names
+SUPABASE_URL=https://cqkhlsfqlsiuoddwbnav.supabase.co
+SUPABASE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNxa2hsc2ZxbHNpdW9kZHdibmF2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDAxMTAwNjUsImV4cCI6MjA1NTY4NjA2NX0.z3Q4Zv66Z8zz3Y_PDL3mgKnZR02QSuizI72XN75uAN8
