@@ -13,10 +13,10 @@ import {
 /**
  * Handle YouTube API requests
  */
-export async function handleRequest(request) {
+export async function handleRequest(request, env, ctx) {
   try {
     // Try to get the user ID (will throw if unauthorized)
-    await getUserIdFromToken(request);
+    await getUserIdFromToken(request, env);
     
     // This is a placeholder implementation
     return jsonResponse({ 

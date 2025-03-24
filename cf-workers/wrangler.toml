@@ -4,10 +4,19 @@ main = "index.js"
 compatibility_date = "2023-09-01"
 account_id = "5267338e6e637da4f95322d02fba6025" 
 workers_dev = true
-route = "api.benjamin-f-mcdaniel.workers.dev/*"
+
+# Remove the route line since we're using workers_dev = true
+# This will make the worker available at creatorino-api.benjamin-f-mcdaniel.workers.dev
 
 # Environment variables
 [vars]
 SUPABASE_URL = ""
 SUPABASE_KEY = ""
+
+# Module format for importing
+[build]
+command = ""
+[build.upload]
+format = "modules"
+main = "./index.js"
 

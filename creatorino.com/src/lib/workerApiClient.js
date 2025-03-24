@@ -7,7 +7,7 @@ import { supabase } from './supabaseClient';
 
 // Base URL for the unified API
 const API_BASE_URL = process.env.NODE_ENV === 'production'
-  ? 'https://api.benjamin-f-mcdaniel.workers.dev'
+  ? 'https://creatorino-api.benjamin-f-mcdaniel.workers.dev'
   : '/api'; // Uses Next.js rewrite in development
 
 /**

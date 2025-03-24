@@ -37,7 +37,7 @@ module.exports = {
       {
         source: '/api/:path*',
         destination: process.env.NODE_ENV === 'production'
-          ? 'https://api.benjamin-f-mcdaniel.workers.dev/:path*'
+          ? 'https://creatorino-api.benjamin-f-mcdaniel.workers.dev/:path*'
           : 'http://localhost:8787/:path*', // Local worker development endpoint
       },
     ];

@@ -14,9 +14,9 @@ import {
 /**
  * Fetch the profile of a user
  */
-async function fetchUserProfile(userId) {
+async function fetchUserProfile(userId, env) {
   try {
-    const supabase = createSupabaseClient();
+    const supabase = createSupabaseClient(env);
     
     // Try to fetch existing profile
     const existingProfile = await supabase
@@ -57,9 +57,9 @@ async function fetchUserProfile(userId) {
 /**
  * Update the profile of a user
  */
-async function updateUserProfile(userId, updates) {
+async function updateUserProfile(userId, updates, env) {
   try {
-    const supabase = createSupabaseClient();
+    const supabase = createSupabaseClient(env);
     
     // Add updated_at timestamp
     const updatedData = {
@@ -83,19 +83,19 @@ async function updateUserProfile(userId, updates) {
  * Handle profile API requests
  * Export this function to be used by the main router
  */
-export async function handleRequest(request) {
+export async function handleRequest(request, env, ctx) {
   try {
     // Get authenticated user ID
-    const userId = await getUserIdFromToken(request);
+    const userId = await getUserIdFromToken(request, env);
     
     // Handle profile endpoints
     if (request.method === 'GET') {
-      const result = await fetchUserProfile(userId);
+      const result = await fetchUserProfile(userId, env);
       return jsonResponse(result);
     } 
     else if (request.method === 'PUT') {
       const updates = await request.json();
-      const result = await updateUserProfile(userId, updates);
+      const result = await updateUserProfile(userId, updates, env);
       return jsonResponse(result);
     }
     

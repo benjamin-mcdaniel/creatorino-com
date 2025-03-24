@@ -1,7 +1,7 @@
 var __defProp = Object.defineProperty;
 var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
 
-// .wrangler/tmp/bundle-bOofvR/checked-fetch.js
+// .wrangler/tmp/bundle-UQdGba/checked-fetch.js
 var urls = /* @__PURE__ */ new Set();
 function checkURL(request, init) {
   const url = request instanceof URL ? request : new URL(
@@ -164,9 +164,9 @@ function errorResponse(message, status = 500) {
 __name(errorResponse, "errorResponse");
 
 // profile/index.js
-async function fetchUserProfile(userId) {
+async function fetchUserProfile(userId, env) {
   try {
-    const supabase = createSupabaseClient();
+    const supabase = createSupabaseClient(env);
     const existingProfile = await supabase.from("profiles").select("*").eq("id", userId).single();
     if (existingProfile && existingProfile.length > 0) {
       return { data: existingProfile[0], error: null };
@@ -190,9 +190,9 @@ async function fetchUserProfile(userId) {
   }
 }
 __name(fetchUserProfile, "fetchUserProfile");
-async function updateUserProfile(userId, updates) {
+async function updateUserProfile(userId, updates, env) {
   try {
-    const supabase = createSupabaseClient();
+    const supabase = createSupabaseClient(env);
     const updatedData = {
       ...updates,
       updated_at: (/* @__PURE__ */ new Date()).toISOString()
@@ -205,15 +205,15 @@ async function updateUserProfile(userId, updates) {
   }
 }
 __name(updateUserProfile, "updateUserProfile");
-async function handleRequest(request) {
+async function handleRequest(request, env, ctx) {
   try {
-    const userId = await getUserIdFromToken(request);
+    const userId = await getUserIdFromToken(request, env);
     if (request.method === "GET") {
-      const result = await fetchUserProfile(userId);
+      const result = await fetchUserProfile(userId, env);
       return jsonResponse(result);
     } else if (request.method === "PUT") {
       const updates = await request.json();
-      const result = await updateUserProfile(userId, updates);
+      const result = await updateUserProfile(userId, updates, env);
       return jsonResponse(result);
     }
     return errorResponse("Method not allowed", 405);
@@ -227,9 +227,9 @@ async function handleRequest(request) {
 __name(handleRequest, "handleRequest");
 
 // youtube/index.js
-async function handleRequest2(request) {
+async function handleRequest2(request, env, ctx) {
   try {
-    await getUserIdFromToken(request);
+    await getUserIdFromToken(request, env);
     return jsonResponse({
       message: "YouTube API module is under development",
       status: "coming soon"
@@ -313,7 +313,7 @@ var jsonError = /* @__PURE__ */ __name(async (request, env, _ctx, middlewareCtx)
 }, "jsonError");
 var middleware_miniflare3_json_error_default = jsonError;
 
-// .wrangler/tmp/bundle-bOofvR/middleware-insertion-facade.js
+// .wrangler/tmp/bundle-UQdGba/middleware-insertion-facade.js
 var __INTERNAL_WRANGLER_MIDDLEWARE__ = [
   middleware_ensure_req_body_drained_default,
   middleware_miniflare3_json_error_default
@@ -345,7 +345,7 @@ function __facade_invoke__(request, env, ctx, dispatch, finalMiddleware) {
 }
 __name(__facade_invoke__, "__facade_invoke__");
 
-// .wrangler/tmp/bundle-bOofvR/middleware-loader.entry.ts
+// .wrangler/tmp/bundle-UQdGba/middleware-loader.entry.ts
 var __Facade_ScheduledController__ = class ___Facade_ScheduledController__ {
   constructor(scheduledTime, cron, noRetry) {
     this.scheduledTime = scheduledTime;
