@@ -1,0 +1,17 @@
+{
+  "name": "creatorino-api",
+  "version": "1.0.0",
+  "description": "Unified API for Creatorino platform",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy"
+  },
+  "author": "",
+  "license": "MIT",
+  "dependencies": {},
+  "devDependencies": {
+    "wrangler": "^3.0.0"
+  }
+}

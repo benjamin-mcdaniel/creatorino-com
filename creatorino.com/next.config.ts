@@ -30,17 +30,16 @@ module.exports = {
     unoptimized: true,
   },
   
-  // Configure API proxy for local development for multiple worker APIs
+  // Configure API proxy for local development
   async rewrites() {
     return [
-      // Profile API - simplified routing now that each worker has its own subdomain
+      // Unified API endpoint
       {
-        source: '/api/profile/:path*',
+        source: '/api/:path*',
         destination: process.env.NODE_ENV === 'production'
-          ? 'https://profile-api.benjamin-f-mcdaniel.workers.dev/:path*'
+          ? 'https://api.benjamin-f-mcdaniel.workers.dev/:path*'
           : 'http://localhost:8787/:path*', // Local worker development endpoint
       },
-      // Add more API routes as needed
     ];
   },
 }

@@ -5,15 +5,15 @@
  */
 import { supabase } from './supabaseClient';
 
-// Base URL for each API worker (will be different in production vs development)
-const PROFILE_API_URL = process.env.NODE_ENV === 'production'
-  ? 'https://profile-api.benjamin-f-mcdaniel.workers.dev'
-  : '/api/profile'; // Uses Next.js rewrite in development
+// Base URL for the unified API
+const API_BASE_URL = process.env.NODE_ENV === 'production'
+  ? 'https://api.benjamin-f-mcdaniel.workers.dev'
+  : '/api'; // Uses Next.js rewrite in development
 
 /**
- * Make an authenticated request to an API
+ * Make an authenticated request to the API
  */
-async function authFetch(baseUrl, endpoint, options = {}) {
+async function authFetch(endpoint, options = {}) {
   // Get current session
   const { data } = await supabase.auth.getSession();
   const session = data.session;
@@ -30,7 +30,7 @@ async function authFetch(baseUrl, endpoint, options = {}) {
   };
   
   // Make the request
-  const response = await fetch(`${baseUrl}${endpoint}`, {
+  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
     ...options,
     headers
   });
@@ -51,9 +51,7 @@ async function authFetch(baseUrl, endpoint, options = {}) {
  */
 export async function fetchProfileFromWorker() {
   try {
-    // For the simplified worker structure, we can use an empty path
-    // since the worker handles all requests at the root
-    return await authFetch(PROFILE_API_URL, '', {
+    return await authFetch('/profile', {
       method: 'GET'
     });
   } catch (error) {
@@ -67,9 +65,7 @@ export async function fetchProfileFromWorker() {
  */
 export async function updateProfileWithWorker(updates) {
   try {
-    // For the simplified worker structure, we can use an empty path
-    // since the worker handles all requests at the root
-    return await authFetch(PROFILE_API_URL, '', {
+    return await authFetch('/profile', {
       method: 'PUT',
       body: JSON.stringify(updates)
     });
@@ -79,5 +75,21 @@ export async function updateProfileWithWorker(updates) {
   }
 }
 
+// === YOUTUBE API METHODS ===
+
+/**
+ * Fetch YouTube analytics (placeholder)
+ */
+export async function fetchYouTubeAnalytics() {
+  try {
+    return await authFetch('/youtube/analytics', {
+      method: 'GET'
+    });
+  } catch (error) {
+    console.error('Error fetching YouTube analytics:', error.message);
+    return { data: null, error };
+  }
+}
+
 // Additional API methods can be added here as needed,
-// organized by API type (profile, auth, etc.)
+// organized by API feature type
