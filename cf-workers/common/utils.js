@@ -158,7 +158,7 @@ export function createSupabaseClient(env) {
       }
       
       if (!token) {
-        throw new Error('Unauthorized');
+        throw new Error('Unauthorized - No token provided');
       }
       
       console.log('Getting user ID from token');
@@ -168,16 +168,16 @@ export function createSupabaseClient(env) {
       const { data, error } = await supabase.auth.getUser(token);
       
       if (error) {
-        console.error('Error getting user from token:', error);
-        throw error;
+        console.error('Supabase auth error:', error.message);
+        throw new Error('Authentication failed: ' + error.message);
       }
       
-      if (!data?.user) {
-        console.error('No user found in token response');
+      if (!data || !data.user) {
+        console.error('No user found in token response:', { hasData: !!data });
         throw new Error('No user found');
       }
       
-      console.log('User ID retrieved successfully:', data.user.id);
+      console.log('User found with ID:', data.user.id.substring(0, 6) + '...');
       return data.user.id;
     } catch (error) {
       console.error('Error in getUserIdFromToken:', error);
