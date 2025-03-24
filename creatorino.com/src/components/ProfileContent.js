@@ -86,16 +86,31 @@ export default function ProfileContent() {
       if (data.session?.user) {
         // Fetch profile data using our new Worker API
         try {
-          const { data: profileData, error } = await fetchProfileFromWorker();
+          console.log('Fetching profile data from worker API');
+          const result = await fetchProfileFromWorker();
           
-          if (error) {
-            setMessage({ type: 'error', text: 'Error loading profile data: ' + error.message });
-          } else if (profileData) {
-            setProfile(profileData);
+          if (result.error) {
+            console.error('Error from worker API:', result.error);
+            setMessage({ 
+              type: 'error', 
+              text: 'Error loading profile data: ' + (result.error.message || 'Unknown error') 
+            });
+          } else if (result.data) {
+            console.log('Profile data received:', result.data);
+            setProfile(result.data);
+          } else {
+            console.error('No profile data returned');
+            setMessage({ 
+              type: 'error', 
+              text: 'No profile data received from server' 
+            });
           }
         } catch (err) {
-          console.error('Error fetching profile:', err);
-          setMessage({ type: 'error', text: 'Error loading profile data' });
+          console.error('Exception fetching profile:', err);
+          setMessage({ 
+            type: 'error', 
+            text: 'Error loading profile data: ' + err.message 
+          });
         }
       } else {
         // Redirect to login if not authenticated
@@ -188,6 +203,7 @@ export default function ProfileContent() {
   const handleSaveProfile = async () => {
     try {
       setSaving(true);
+      console.log('Saving profile...');
       
       // First, save profile details using Worker API
       const updatedProfile = {
@@ -197,15 +213,16 @@ export default function ProfileContent() {
         bio: profile.bio
       };
       
-      const { error: updateError } = await updateProfileWithWorker(updatedProfile);
+      const result = await updateProfileWithWorker(updatedProfile);
       
-      if (updateError) throw updateError;
+      if (result.error) {
+        console.error('Error updating profile:', result.error);
+        throw new Error(result.error.message || 'Failed to update profile');
+      }
       
       // Note: Avatar upload is not yet implemented in the worker
-      // This would need to be added to the worker or kept server-side temporarily
       if (avatarFile) {
         // TODO: Implement avatar upload in the worker API
-        // For now, show a message that this feature is coming soon
         setMessage({ 
           type: 'warning', 
           text: 'Avatar upload will be available soon. Profile details have been updated.' 
@@ -219,9 +236,9 @@ export default function ProfileContent() {
       setAvatarPreview(null);
       
       // Refresh profile data
-      const { data: refreshedProfile } = await fetchProfileFromWorker();
-      if (refreshedProfile) {
-        setProfile(refreshedProfile);
+      const refreshResult = await fetchProfileFromWorker();
+      if (refreshResult.data) {
+        setProfile(refreshResult.data);
       }
     } catch (error) {
       console.error('Error saving profile:', error);

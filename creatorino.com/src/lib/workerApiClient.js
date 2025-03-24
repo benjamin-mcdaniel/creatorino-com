@@ -30,18 +30,28 @@ async function authFetch(endpoint, options = {}) {
   };
   
   // Make the request
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-    ...options,
-    headers
-  });
-  
-  // Handle non-OK responses
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({}));
-    throw new Error(error.message || `API request failed with status ${response.status}`);
+  try {
+    console.log(`Making ${options.method || 'GET'} request to ${API_BASE_URL}${endpoint}`);
+    
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      ...options,
+      headers
+    });
+    
+    // Parse the response as JSON
+    const responseData = await response.json();
+    
+    // Handle non-OK responses
+    if (!response.ok) {
+      console.error('API request failed:', response.status, responseData);
+      throw new Error(responseData.error || `API request failed with status ${response.status}`);
+    }
+    
+    return responseData;
+  } catch (error) {
+    console.error('Error in authFetch:', error);
+    throw error;
   }
-  
-  return response.json();
 }
 
 // === PROFILE API METHODS ===
@@ -51,12 +61,18 @@ async function authFetch(endpoint, options = {}) {
  */
 export async function fetchProfileFromWorker() {
   try {
-    return await authFetch('/profile', {
+    console.log('Fetching profile from worker');
+    const result = await authFetch('/profile', {
       method: 'GET'
     });
+    
+    console.log('Profile fetch result:', result);
+    
+    // Return data in the same format as the previous Supabase implementation
+    return result;
   } catch (error) {
     console.error('Error fetching profile from worker:', error.message);
-    return { data: null, error };
+    return { data: null, error: { message: error.message } };
   }
 }
 
@@ -65,13 +81,19 @@ export async function fetchProfileFromWorker() {
  */
 export async function updateProfileWithWorker(updates) {
   try {
-    return await authFetch('/profile', {
+    console.log('Updating profile with worker:', updates);
+    const result = await authFetch('/profile', {
       method: 'PUT',
       body: JSON.stringify(updates)
     });
+    
+    console.log('Profile update result:', result);
+    
+    // Return data in the same format as the previous Supabase implementation
+    return result;
   } catch (error) {
     console.error('Error updating profile with worker:', error.message);
-    return { data: null, error };
+    return { data: null, error: { message: error.message } };
   }
 }
 

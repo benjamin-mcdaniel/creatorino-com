@@ -10,21 +10,37 @@ export function createSupabaseClient(env) {
     
     // Verify that environment variables are properly set
     if (!SUPABASE_URL || !SUPABASE_KEY) {
+      console.error('Missing Supabase credentials');
       throw new Error('Supabase environment variables are not properly configured');
     }
+    
+    console.log('Creating Supabase client with URL:', SUPABASE_URL.substring(0, 15) + '...');
     
     return {
       auth: {
         getUser: async (token) => {
-          const response = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'apikey': SUPABASE_KEY
+          console.log('Fetching user with token');
+          try {
+            const response = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+              headers: {
+                'Authorization': `Bearer ${token}`,
+                'apikey': SUPABASE_KEY
+              }
+            });
+            
+            if (!response.ok) {
+              const errorText = await response.text();
+              console.error('Failed to get user:', response.status, errorText);
+              throw new Error(`Failed to get user: ${response.status}`);
             }
-          });
-          
-          if (!response.ok) throw new Error('Failed to get user');
-          return response.json();
+            
+            const data = await response.json();
+            console.log('User data retrieved successfully');
+            return { data, error: null };
+          } catch (error) {
+            console.error('Error in getUser:', error);
+            return { data: null, error };
+          }
         }
       },
       from: (table) => {
@@ -120,27 +136,41 @@ export function createSupabaseClient(env) {
    * Extract user ID from authentication token in request
    */
   export async function getUserIdFromToken(request, env) {
-    // Get token from Authorization header
-    const authHeader = request.headers.get('Authorization');
-    let token = null;
-    
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-      token = authHeader.substring(7);
+    try {
+      // Get token from Authorization header
+      const authHeader = request.headers.get('Authorization');
+      let token = null;
+      
+      if (authHeader && authHeader.startsWith('Bearer ')) {
+        token = authHeader.substring(7);
+      }
+      
+      if (!token) {
+        throw new Error('Unauthorized');
+      }
+      
+      console.log('Getting user ID from token');
+      
+      // Get user from token
+      const supabase = createSupabaseClient(env);
+      const { data, error } = await supabase.auth.getUser(token);
+      
+      if (error) {
+        console.error('Error getting user from token:', error);
+        throw error;
+      }
+      
+      if (!data?.user) {
+        console.error('No user found in token response');
+        throw new Error('No user found');
+      }
+      
+      console.log('User ID retrieved successfully:', data.user.id);
+      return data.user.id;
+    } catch (error) {
+      console.error('Error in getUserIdFromToken:', error);
+      throw error;
     }
-    
-    if (!token) {
-      throw new Error('Unauthorized');
-    }
-    
-    // Get user from token
-    const supabase = createSupabaseClient(env);
-    const { data: userData } = await supabase.auth.getUser(token);
-    
-    if (!userData?.user) {
-      throw new Error('No user found');
-    }
-    
-    return userData.user.id;
   }
   
   /**
