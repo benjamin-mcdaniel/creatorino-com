@@ -10,7 +10,10 @@ workers_dev = true
 
 # Environment variables
 [vars]
-SUPABASE_URL = ""
+# These values will be replaced by actual secrets in production
+# They need to be set in the Cloudflare Dashboard
+SUPABASE_URL = "https://cqkhlsfqlsiuoddwbnav.supabase.co"
+# For local development, use the service role key, not the anon key
 SUPABASE_KEY = ""
 
 # Remove the redundant build.upload configuration

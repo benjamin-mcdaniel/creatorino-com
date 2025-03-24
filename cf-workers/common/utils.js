@@ -5,12 +5,24 @@
 // Supabase client creation with environment parameters
 export function createSupabaseClient(env) {
     // Access environment variables from the env parameter
-    const SUPABASE_URL = env.SUPABASE_URL || '';
-    const SUPABASE_KEY = env.SUPABASE_KEY || '';
+    const SUPABASE_URL = env?.SUPABASE_URL || '';
+    const SUPABASE_KEY = env?.SUPABASE_KEY || '';
+    
+    // More detailed logging for debugging
+    console.log('Environment check:', {
+      hasEnv: !!env,
+      hasSupabaseUrl: !!SUPABASE_URL,
+      hasSupabaseKey: !!SUPABASE_KEY,
+      urlPrefix: SUPABASE_URL ? SUPABASE_URL.substring(0, 10) + '...' : 'missing',
+      keyPrefix: SUPABASE_KEY ? SUPABASE_KEY.substring(0, 5) + '...' : 'missing'
+    });
     
     // Verify that environment variables are properly set
     if (!SUPABASE_URL || !SUPABASE_KEY) {
-      console.error('Missing Supabase credentials');
+      console.error('Missing Supabase credentials:', {
+        url: !SUPABASE_URL ? 'missing' : 'present',
+        key: !SUPABASE_KEY ? 'missing' : 'present'
+      });
       throw new Error('Supabase environment variables are not properly configured');
     }
     

@@ -19,6 +19,14 @@ async function handleRequest(request, env, ctx) {
   const url = new URL(request.url);
   const path = url.pathname;
   
+  // Log environment for debugging
+  console.log('ENV VARS:', {
+    hasSupabaseUrl: !!env.SUPABASE_URL,
+    hasSupabaseKey: !!env.SUPABASE_KEY,
+    supabaseUrlPrefix: env.SUPABASE_URL ? env.SUPABASE_URL.substring(0, 10) + '...' : 'undefined',
+    envKeys: Object.keys(env)
+  });
+  
   // Global CORS handling for all routes
   if (request.method === "OPTIONS") {
     return new Response(null, {
