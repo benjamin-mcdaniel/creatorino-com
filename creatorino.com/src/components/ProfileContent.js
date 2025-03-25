@@ -505,7 +505,7 @@ export default function ProfileContent() {
                     color="primary"
                     startIcon={editMode ? <CancelIcon /> : <EditIcon />}
                     onClick={handleEditToggle}
-                    className="relative justify-center cursor-pointer inline-flex items-center space-x-2 text-center font-regular ease-out duration-200 rounded-md outline-none transition-all outline-0 focus-visible:outline-4 focus-visible:outline-offset-1 border hover:bg-opacity-80 focus-visible:outline-primary-600 text-sm px-4 py-2 h-[38px]"
+                    className="relative justify-center cursor-pointer inline-flex items-center space-x-2 text-center font-regular ease-out duration-200 rounded-md outline-none transition-all outline-0 focus-visible:outline-4 focus-visible:outline-offset-1 border hover:bg-opacity-80 focus-visible:outline-primary-600 text-sm px-4 py-2"
                     sx={{ 
                       mt: 2,
                       borderColor: 'primary.500',
@@ -513,7 +513,10 @@ export default function ProfileContent() {
                         borderColor: 'primary.600',
                       },
                       textTransform: 'none',
-                      fontWeight: 'normal'
+                      fontWeight: 'normal',
+                      height: '32px', // Reduced height
+                      py: 0.5, // Reduced vertical padding
+                      lineHeight: 1
                     }}
                   >
                     <span className="truncate">{editMode ? 'Cancel' : 'Edit Profile'}</span>
@@ -657,14 +660,16 @@ export default function ProfileContent() {
                             startIcon={saving ? <CircularProgress size={20} color="inherit" /> : <SaveIcon />}
                             onClick={handleSaveProfile}
                             disabled={saving}
-                            className="relative justify-center cursor-pointer inline-flex items-center space-x-2 text-center font-regular ease-out duration-200 rounded-md outline-none transition-all outline-0 focus-visible:outline-4 focus-visible:outline-offset-1 border hover:bg-opacity-80 focus-visible:outline-primary-600 text-sm px-4 py-2 h-[38px]"
+                            className="relative justify-center cursor-pointer inline-flex items-center space-x-2 text-center font-regular ease-out duration-200 rounded-md outline-none transition-all outline-0 focus-visible:outline-4 focus-visible:outline-offset-1 border hover:bg-opacity-80 focus-visible:outline-primary-600 text-sm px-4 py-2"
                             sx={{ 
                               borderColor: 'primary.500',
                               '&:hover': {
                                 borderColor: 'primary.600',
                               },
                               textTransform: 'none',
-                              fontWeight: 'normal'
+                              fontWeight: 'normal',
+                              height: '34px', // Reduced height
+                              py: 0.5 // Reduced vertical padding
                             }}
                           >
                             <span className="truncate">{saving ? 'Saving...' : 'Save Changes'}</span>
@@ -696,14 +701,16 @@ export default function ProfileContent() {
                         <Button 
                           variant="outlined" 
                           size="small"
-                          className="relative justify-center cursor-pointer inline-flex items-center space-x-2 text-center font-regular ease-out duration-200 rounded-md outline-none transition-all outline-0 focus-visible:outline-4 focus-visible:outline-offset-1 border hover:bg-opacity-80 focus-visible:outline-primary-600 text-sm px-3 py-1 h-[32px]"
+                          className="relative justify-center cursor-pointer inline-flex items-center space-x-2 text-center font-regular ease-out duration-200 rounded-md outline-none transition-all outline-0 focus-visible:outline-4 focus-visible:outline-offset-1 border hover:bg-opacity-80 focus-visible:outline-primary-600 text-sm px-3 py-1"
                           sx={{ 
                             borderColor: 'primary.500',
                             '&:hover': {
                               borderColor: 'primary.600',
                             },
                             textTransform: 'none',
-                            fontWeight: 'normal'
+                            fontWeight: 'normal',
+                            height: '28px', // Reduced height
+                            py: 0.25 // Reduced vertical padding
                           }}
                           onClick={async () => {
                             if (session?.user?.email) {
@@ -735,14 +742,16 @@ export default function ProfileContent() {
                           variant="outlined" 
                           color="error"
                           size="small"
-                          className="relative justify-center cursor-pointer inline-flex items-center space-x-2 text-center font-regular ease-out duration-200 rounded-md outline-none transition-all outline-0 focus-visible:outline-4 focus-visible:outline-offset-1 border hover:bg-opacity-80 focus-visible:outline-primary-600 text-sm px-3 py-1 h-[32px]"
+                          className="relative justify-center cursor-pointer inline-flex items-center space-x-2 text-center font-regular ease-out duration-200 rounded-md outline-none transition-all outline-0 focus-visible:outline-4 focus-visible:outline-offset-1 border hover:bg-opacity-80 focus-visible:outline-primary-600 text-sm px-3 py-1"
                           sx={{ 
                             borderColor: 'error.main',
                             '&:hover': {
                               borderColor: 'error.dark',
                             },
                             textTransform: 'none',
-                            fontWeight: 'normal'
+                            fontWeight: 'normal',
+                            height: '28px', // Reduced height
+                            py: 0.25 // Reduced vertical padding
                           }}
                           onClick={handleDisableMFA}
                           disabled={mfaLoading}
@@ -756,14 +765,16 @@ export default function ProfileContent() {
                           variant="outlined" 
                           color="primary"
                           size="small"
-                          className="relative justify-center cursor-pointer inline-flex items-center space-x-2 text-center font-regular ease-out duration-200 rounded-md outline-none transition-all outline-0 focus-visible:outline-4 focus-visible:outline-offset-1 border hover:bg-opacity-80 focus-visible:outline-primary-600 text-sm px-3 py-1 h-[32px]"
+                          className="relative justify-center cursor-pointer inline-flex items-center space-x-2 text-center font-regular ease-out duration-200 rounded-md outline-none transition-all outline-0 focus-visible:outline-4 focus-visible:outline-offset-1 border hover:bg-opacity-80 focus-visible:outline-primary-600 text-sm px-3 py-1"
                           sx={{ 
                             borderColor: 'primary.500',
                             '&:hover': {
                               borderColor: 'primary.600',
                             },
                             textTransform: 'none',
-                            fontWeight: 'normal'
+                            fontWeight: 'normal',
+                            height: '28px', // Reduced height
+                            py: 0.25 // Reduced vertical padding
                           }}
                           onClick={handleEnableMFA}
                           disabled={mfaLoading}
@@ -819,12 +830,21 @@ export default function ProfileContent() {
           />
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setShowMFADialog(false)}>Cancel</Button>
+          <Button onClick={() => setShowMFADialog(false)} 
+            sx={{ 
+              height: '32px', // Reduced height 
+              py: 0.5 // Reduced vertical padding
+            }}
+          >Cancel</Button>
           <Button 
             onClick={handleVerifyMFA} 
             variant="contained" 
             color="primary"
             disabled={mfaLoading}
+            sx={{ 
+              height: '32px', // Reduced height
+              py: 0.5 // Reduced vertical padding
+            }}
           >
             {mfaLoading ? 'Verifying...' : 'Verify'}
           </Button>

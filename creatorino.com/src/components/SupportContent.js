@@ -555,13 +555,18 @@ export default function SupportContent() {
                         supportType === 'bug' ? 'error' :
                         supportType === 'feature' ? 'success' : 'primary'
                       }
-                      size="large"
+                      size="medium" // Changed from large
                       disabled={submitting}
                       startIcon={submitting ? <CircularProgress size={20} /> : null}
+                      sx={{
+                        height: '36px', // Reduced height
+                        py: 0.5 // Reduced vertical padding
+                      }}
                     >
                       {submitting ? 'Submitting...' : 'Submit Request'}
                     </Button>
                   </Box>
+
                 </form>
               </CardContent>
             </Card>

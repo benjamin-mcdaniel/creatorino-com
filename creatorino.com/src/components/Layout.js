@@ -129,7 +129,9 @@ export default function Layout({ children, title = 'Creatorino' }) {
                           backgroundColor: 'rgba(0, 0, 0, 0.04)'
                         },
                         textTransform: 'none',
-                        fontSize: '0.95rem'
+                        fontSize: '0.95rem',
+                        height: '32px', // Reduced height
+                        py: 0.5 // Reduced vertical padding
                       }}
                     >
                       {link.name}
@@ -137,16 +139,20 @@ export default function Layout({ children, title = 'Creatorino' }) {
                   </Link>
                 ))}
                 
-                {/* Dashboard Button - now styled like the other menu items for consistency */}
+                {/* Dashboard Button - change to blue variant */}
                 {session && (
                   <Link href="/dashboard" passHref>
                     <Button
                       color="primary"
+                      variant="contained" // Add this to make it blue
                       sx={{
                         mx: 1,
                         textTransform: 'none',
                         fontSize: '0.95rem',
-                        fontWeight: 'medium'
+                        fontWeight: 'medium',
+                        borderRadius: '6px', // Match other buttons' styling
+                        height: '32px', // Reduced height
+                        py: 0.5 // Reduced vertical padding
                       }}
                     >
                       Dashboard
@@ -267,7 +273,9 @@ export default function Layout({ children, title = 'Creatorino' }) {
                           borderRadius: '8px',
                           textTransform: 'none',
                           fontSize: '1rem',
-                          fontWeight: 'normal'
+                          fontWeight: 'normal',
+                          height: '34px', // Reduced height
+                          py: 0.5 // Reduced vertical padding
                         }}
                       >
                         Log In
@@ -281,7 +289,9 @@ export default function Layout({ children, title = 'Creatorino' }) {
                           borderRadius: '8px',
                           textTransform: 'none',
                           fontSize: '1rem',
-                          fontWeight: 'normal'
+                          fontWeight: 'normal',
+                          height: '34px', // Reduced height
+                          py: 0.5 // Reduced vertical padding
                         }}
                       >
                         Sign Up
