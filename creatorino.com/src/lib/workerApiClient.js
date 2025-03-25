@@ -1,77 +1,66 @@
 /**
- * API client for Cloudflare Workers
+ * Profile service for client-side API calls
  * 
- * Provides methods to interact with server-side functions running in Cloudflare Workers
+ * Moving back to direct Supabase calls instead of worker API
  */
 import { supabase } from './supabaseClient';
-
-// Base URL for the unified API
-const API_BASE_URL = process.env.NODE_ENV === 'production'
-  ? 'https://creatorino-api.benjamin-f-mcdaniel.workers.dev'
-  : '/api'; // Uses Next.js rewrite in development
-
-/**
- * Make an authenticated request to the API
- */
-async function authFetch(endpoint, options = {}) {
-  // Get current session
-  const { data } = await supabase.auth.getSession();
-  const session = data.session;
-  
-  if (!session) {
-    throw new Error('No active session');
-  }
-  
-  // Add auth header
-  const headers = {
-    'Content-Type': 'application/json',
-    'Authorization': `Bearer ${session.access_token}`,
-    ...options.headers
-  };
-  
-  // Make the request
-  try {
-    console.log(`Making ${options.method || 'GET'} request to ${API_BASE_URL}${endpoint}`);
-    
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-      ...options,
-      headers
-    });
-    
-    // Parse the response as JSON
-    const responseData = await response.json();
-    
-    // Handle non-OK responses
-    if (!response.ok) {
-      console.error('API request failed:', response.status, responseData);
-      throw new Error(responseData.error || `API request failed with status ${response.status}`);
-    }
-    
-    return responseData;
-  } catch (error) {
-    console.error('Error in authFetch:', error);
-    throw error;
-  }
-}
-
-// === PROFILE API METHODS ===
 
 /**
  * Fetch the profile of the current logged-in user
  */
 export async function fetchProfileFromWorker() {
   try {
-    console.log('Fetching profile from worker');
-    const result = await authFetch('/profile', {
-      method: 'GET'
-    });
+    console.log('Fetching profile directly from Supabase');
+    const { data: { session } } = await supabase.auth.getSession();
     
-    console.log('Profile fetch result:', result);
+    if (!session) {
+      throw new Error('No active session');
+    }
     
-    // Return data in the same format as the previous Supabase implementation
-    return result;
+    // Try to fetch existing profile
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', session.user.id)
+      .single();
+      
+    if (error && error.code !== 'PGRST116') {
+      console.error('Error fetching profile:', error);
+      return { data: null, error };
+    }
+    
+    // If profile exists, return it
+    if (data) {
+      console.log('Found existing profile');
+      return { data, error: null };
+    }
+    
+    // Profile doesn't exist, create a new one
+    console.log('Creating new profile for user');
+    
+    const newProfile = {
+      id: session.user.id,
+      first_name: '',
+      last_name: '',
+      nickname: '',
+      bio: '',
+      avatar_url: '',
+      updated_at: new Date().toISOString()
+    };
+    
+    const { data: createdProfile, error: createError } = await supabase
+      .from('profiles')
+      .insert([newProfile])
+      .select();
+      
+    if (createError) {
+      console.error('Error creating profile:', createError);
+      return { data: null, error: createError };
+    }
+    
+    return { data: createdProfile[0], error: null };
   } catch (error) {
-    console.error('Error fetching profile from worker:', error.message);
+    console.error('Error fetching profile:', error.message);
     return { data: null, error: { message: error.message } };
   }
 }
@@ -81,37 +70,47 @@ export async function fetchProfileFromWorker() {
  */
 export async function updateProfileWithWorker(updates) {
   try {
-    console.log('Updating profile with worker:', updates);
-    const result = await authFetch('/profile', {
-      method: 'PUT',
-      body: JSON.stringify(updates)
-    });
+    console.log('Updating profile directly in Supabase:', updates);
     
-    console.log('Profile update result:', result);
+    // Get current session
+    const { data: { session } } = await supabase.auth.getSession();
     
-    // Return data in the same format as the previous Supabase implementation
-    return result;
+    if (!session) {
+      throw new Error('No active session');
+    }
+    
+    // Add updated_at timestamp
+    const updatedData = {
+      ...updates,
+      updated_at: new Date().toISOString()
+    };
+    
+    const { data, error } = await supabase
+      .from('profiles')
+      .update(updatedData)
+      .eq('id', session.user.id)
+      .select();
+      
+    if (error) {
+      console.error('Error updating profile:', error);
+      return { data: null, error };
+    }
+    
+    console.log('Profile updated successfully');
+    return { data: data[0], error: null };
   } catch (error) {
-    console.error('Error updating profile with worker:', error.message);
+    console.error('Error updating profile:', error.message);
     return { data: null, error: { message: error.message } };
   }
 }
-
-// === YOUTUBE API METHODS ===
 
 /**
  * Fetch YouTube analytics (placeholder)
  */
 export async function fetchYouTubeAnalytics() {
-  try {
-    return await authFetch('/youtube/analytics', {
-      method: 'GET'
-    });
-  } catch (error) {
-    console.error('Error fetching YouTube analytics:', error.message);
-    return { data: null, error };
-  }
+  // This is now a placeholder that would be implemented client-side
+  return { 
+    data: { message: "YouTube analytics functionality coming soon" }, 
+    error: null 
+  };
 }
-
-// Additional API methods can be added here as needed,
-// organized by API feature type

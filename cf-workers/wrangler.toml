@@ -1,23 +1,15 @@
-# Parent configuration with shared settings
+# This file has been reverted to its original state
 name = "creatorino-api"
 main = "index.js"
 compatibility_date = "2023-09-01"
 account_id = "5267338e6e637da4f95322d02fba6025" 
 workers_dev = true
 
-# Remove the route line since we're using workers_dev = true
-# This will make the worker available at creatorino-api.benjamin-f-mcdaniel.workers.dev
-
 # Environment variables
 [vars]
-# These values will be replaced by actual secrets in production
-# They need to be set in the Cloudflare Dashboard
-SUPABASE_URL = "https://cqkhlsfqlsiuoddwbnav.supabase.co"
-# For local development, use the service role key, not the anon key
+SUPABASE_URL = ""
 SUPABASE_KEY = ""
 
-# Remove the redundant build.upload configuration
-# The error says: "Don't define both the `main` and `build.upload.main` fields"
 [build]
 command = ""
 

@@ -30,16 +30,8 @@ module.exports = {
     unoptimized: true,
   },
   
-  // Configure API proxy for local development
+  // No need for API proxy since we're using direct Supabase calls
   async rewrites() {
-    return [
-      // Unified API endpoint
-      {
-        source: '/api/:path*',
-        destination: process.env.NODE_ENV === 'production'
-          ? 'https://creatorino-api.benjamin-f-mcdaniel.workers.dev/:path*'
-          : 'http://localhost:8787/:path*', // Local worker development endpoint
-      },
-    ];
+    return [];
   },
 }
