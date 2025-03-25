@@ -98,7 +98,7 @@ export default function Layout({ children, title = 'Creatorino' }) {
           <Toolbar disableGutters sx={{ justifyContent: 'space-between' }}>
             
             {/* Logo */}
-            <Link href="/" passHref>
+            <Link href="/" passHref legacyBehavior>
               <Typography
                 variant="h4"
                 component="a"
@@ -120,8 +120,9 @@ export default function Layout({ children, title = 'Creatorino' }) {
               {/* Navigation Links - Now displayed on the right */}
               <Box sx={{ display: { xs: 'none', md: 'flex' }, mr: 2 }}>
                 {navLinks.map((link) => (
-                  <Link key={link.name} href={link.href} passHref>
+                  <Link key={link.name} href={link.href} passHref legacyBehavior>
                     <Button
+                      component="a"
                       sx={{
                         color: 'text.primary',
                         mx: 1,
@@ -141,8 +142,9 @@ export default function Layout({ children, title = 'Creatorino' }) {
                 
                 {/* Dashboard Button - change to blue variant */}
                 {session && (
-                  <Link href="/dashboard" passHref>
+                  <Link href="/dashboard" passHref legacyBehavior>
                     <Button
+                      component="a"
                       color="primary"
                       variant="contained" // Add this to make it blue
                       sx={{
@@ -264,8 +266,9 @@ export default function Layout({ children, title = 'Creatorino' }) {
                   </Box>
                 ) : (
                   <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                    <Link href="/login" passHref>
+                    <Link href="/login" passHref legacyBehavior>
                       <Button
+                        component="a"
                         variant="outlined"
                         color="primary"
                         sx={{
@@ -281,8 +284,9 @@ export default function Layout({ children, title = 'Creatorino' }) {
                         Log In
                       </Button>
                     </Link>
-                    <Link href="/signup" passHref>
+                    <Link href="/signup" passHref legacyBehavior>
                       <Button
+                        component="a"
                         variant="contained"
                         color="primary"
                         sx={{
