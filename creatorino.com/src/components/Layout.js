@@ -11,6 +11,7 @@ import MenuIcon from '@mui/icons-material/Menu';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import Link from 'next/link';
 import Logo from './Logo';
+import { getCachedAvatar, cacheAvatar, preloadAvatar } from '../lib/avatarCache';
 
 // Updated nav links - removed About, added Features and Pricing
 const navLinks = [
@@ -26,6 +27,8 @@ export default function Layout({ children, title = 'Creatorino' }) {
   const [loading, setLoading] = useState(true);
   const [anchorElUser, setAnchorElUser] = useState(null);
   const [anchorElNav, setAnchorElNav] = useState(null);
+  const [isAvatarLoaded, setIsAvatarLoaded] = useState(false);
+  const [cachedAvatarUrl, setCachedAvatarUrl] = useState(null);
 
   // Fetch session and profile when component mounts
   useEffect(() => {
@@ -61,6 +64,31 @@ export default function Layout({ children, title = 'Creatorino' }) {
       authListener.subscription.unsubscribe();
     };
   }, []);
+
+  // Try to get cached avatar when session is available
+  useEffect(() => {
+    if (session?.user?.id) {
+      const cached = getCachedAvatar(session.user.id);
+      if (cached) {
+        setCachedAvatarUrl(cached);
+        // Preload the image
+        preloadAvatar(cached)
+          .then(() => setIsAvatarLoaded(true))
+          .catch(() => setIsAvatarLoaded(false)); // Reset if there's an error loading
+      }
+    }
+  }, [session]);
+
+  // Update cache when profile changes
+  useEffect(() => {
+    if (profile?.avatar_url && session?.user?.id) {
+      // Only update cache if the URL has changed
+      if (cachedAvatarUrl !== profile.avatar_url) {
+        cacheAvatar(session.user.id, profile.avatar_url);
+        setCachedAvatarUrl(profile.avatar_url);
+      }
+    }
+  }, [profile, session, cachedAvatarUrl]);
 
   const handleOpenUserMenu = (event) => {
     setAnchorElUser(event.currentTarget);
@@ -169,17 +197,44 @@ export default function Layout({ children, title = 'Creatorino' }) {
                   <Box sx={{ display: 'flex', alignItems: 'center' }}>
                     <Tooltip title="Open settings">
                       <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
-                        {profile?.avatar_url ? (
-                          <Avatar 
-                            src={profile.avatar_url} 
-                            alt={profile.first_name || session.user.email}
-                            sx={{ 
-                              width: 48, 
-                              height: 48,
-                              border: '2px solid',
-                              borderColor: 'primary.light',
-                            }}
-                          />
+                        {(profile?.avatar_url || cachedAvatarUrl) ? (
+                          <Box sx={{ position: 'relative', width: 48, height: 48 }}>
+                            {/* Show initials as fallback while image loads */}
+                            {!isAvatarLoaded && (
+                              <Avatar 
+                                sx={{ 
+                                  width: 48, 
+                                  height: 48, 
+                                  bgcolor: 'primary.main',
+                                  border: '2px solid',
+                                  borderColor: 'primary.light',
+                                  fontSize: '1.5rem',
+                                  position: 'absolute',
+                                  top: 0,
+                                  left: 0
+                                }}
+                              >
+                                {(profile?.first_name?.charAt(0) || session?.user?.email?.charAt(0) || 'U').toUpperCase()}
+                              </Avatar>
+                            )}
+                            <Avatar 
+                              src={profile?.avatar_url || cachedAvatarUrl}
+                              alt={profile?.first_name || session?.user?.email || 'User'}
+                              onLoad={() => setIsAvatarLoaded(true)}
+                              onError={() => setIsAvatarLoaded(false)}
+                              sx={{ 
+                                width: 48, 
+                                height: 48,
+                                border: '2px solid',
+                                borderColor: 'primary.light',
+                                opacity: isAvatarLoaded ? 1 : 0,
+                                transition: 'opacity 0.2s ease-in',
+                                position: 'absolute',
+                                top: 0,
+                                left: 0
+                              }}
+                            />
+                          </Box>
                         ) : (
                           <Avatar 
                             sx={{ 
