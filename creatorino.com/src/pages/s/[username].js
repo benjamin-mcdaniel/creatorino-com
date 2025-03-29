@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
-import { Box, Avatar, Typography, Button, CircularProgress, Container, Alert } from '@mui/material';
+import { Box, Avatar, Typography, Button, CircularProgress, Container, Alert, Menu, MenuItem, ListItemIcon, ListItemText, Dialog, DialogTitle, DialogContent, DialogActions, Snackbar, IconButton } from '@mui/material';
 import TwitterIcon from '@mui/icons-material/Twitter';
 import YouTubeIcon from '@mui/icons-material/YouTube';
 import InstagramIcon from '@mui/icons-material/Instagram';
@@ -10,7 +10,10 @@ import FacebookIcon from '@mui/icons-material/Facebook';
 import PublicIcon from '@mui/icons-material/Public';
 import LinkedInIcon from '@mui/icons-material/LinkedIn';
 import GitHubIcon from '@mui/icons-material/GitHub';
-import TiktokIcon from '@mui/icons-material/MusicVideo'; // Using MusicVideo as a stand-in for TikTok
+import TiktokIcon from '@mui/icons-material/MusicVideo'; 
+import MoreVertIcon from '@mui/icons-material/MoreVert';
+import ReportIcon from '@mui/icons-material/Report';
+import LinkIcon from '@mui/icons-material/Link';
 import { supabase, logSupabaseError } from '../../lib/supabaseClient';
 import { COLOR_THEMES } from '../../components/dashboard/SocialLinks/utils';
 
@@ -43,7 +46,18 @@ export default function UserLinksPage() {
   const [error, setError] = useState(null);
   const [notFound, setNotFound] = useState(false);
   const [username, setUsername] = useState(null);
+  const [session, setSession] = useState(null);
   const router = useRouter();
+
+  // Simplified report functionality state
+  const [menuAnchorEl, setMenuAnchorEl] = useState(null);
+  const [reportDialogOpen, setReportDialogOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: '',
+    severity: 'success'
+  });
 
   // Extract username from URL path (this is key for Cloudflare Pages static hosting)
   useEffect(() => {
@@ -63,6 +77,16 @@ export default function UserLinksPage() {
         setLoading(false);
       }
     }
+  }, []);
+
+  // Fetch user session
+  useEffect(() => {
+    const fetchSession = async () => {
+      const { data } = await supabase.auth.getSession();
+      setSession(data.session);
+    };
+    
+    fetchSession();
   }, []);
 
   // Fetch data on client side when username is available
@@ -170,6 +194,102 @@ export default function UserLinksPage() {
       fetchUserData();
     }
   }, [username]);
+
+  const handleMenuOpen = (event) => {
+    setMenuAnchorEl(event.currentTarget);
+  };
+
+  const handleMenuClose = () => {
+    setMenuAnchorEl(null);
+  };
+
+  const handleReportOpen = () => {
+    setReportDialogOpen(true);
+    handleMenuClose();
+  };
+
+  const handleReportClose = () => {
+    setReportDialogOpen(false);
+  };
+
+  const handleSubmitReport = async () => {
+    setIsSubmitting(true);
+    
+    try {
+      // Check if the user has already been reported
+      const { data: existingReport } = await supabase
+        .from('reported_users')
+        .select('report_count')
+        .eq('user_id', profile.id)
+        .single();
+      
+      if (existingReport) {
+        // If the user was already reported, increment the count
+        const { error: updateError } = await supabase
+          .from('reported_users')
+          .update({
+            report_count: existingReport.report_count + 1,
+            last_reported: new Date().toISOString(),
+            // Update status based on count
+            status: existingReport.report_count + 1 >= 30 ? 'restricted' :
+                   existingReport.report_count + 1 >= 20 ? 'warned' :
+                   existingReport.report_count + 1 >= 10 ? 'flagged' : 'normal'
+          })
+          .eq('user_id', profile.id);
+          
+        if (updateError) throw updateError;
+      } else {
+        // First report for this user
+        const { error: insertError } = await supabase
+          .from('reported_users')
+          .insert({
+            user_id: profile.id,
+            report_count: 1,
+            status: 'normal'
+          });
+          
+        if (insertError) throw insertError;
+      }
+      
+      // Show success message
+      setSnackbar({
+        open: true,
+        message: 'Thank you for reporting this page.',
+        severity: 'success'
+      });
+      
+      // Close the dialog
+      handleReportClose();
+    } catch (error) {
+      console.error('Error submitting report:', error);
+      setSnackbar({
+        open: true,
+        message: 'Failed to submit report. Please try again later.',
+        severity: 'error'
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleSnackbarClose = () => {
+    setSnackbar((prev) => ({
+      ...prev,
+      open: false
+    }));
+  };
+
+  const handleCopyLink = () => {
+    const link = `https://creatorino.com/s/${username}`;
+    navigator.clipboard.writeText(link).then(() => {
+      setSnackbar({
+        open: true,
+        message: 'Link copied to clipboard',
+        severity: 'success'
+      });
+    });
+    handleMenuClose();
+  };
 
   // Show loading state
   if (loading) {
@@ -282,8 +402,53 @@ export default function UserLinksPage() {
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          py: 4
+          py: 4,
+          position: 'relative'
         }}>
+          {/* Menu Button - positioned at the top right */}
+          <IconButton 
+            sx={{ 
+              position: 'absolute', 
+              top: 0, 
+              right: 0,
+              color: theme.textColor
+            }}
+            onClick={handleMenuOpen}
+            aria-label="page options"
+          >
+            {/* Replace MoreVertIcon with "!" text */}
+            <Typography 
+              sx={{ 
+                fontWeight: 'bold',
+                fontSize: '20px'
+              }}
+            >
+              !
+            </Typography>
+          </IconButton>
+          
+          {/* Options Menu */}
+          <Menu
+            anchorEl={menuAnchorEl}
+            open={Boolean(menuAnchorEl)}
+            onClose={handleMenuClose}
+            transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+            anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+          >
+            <MenuItem onClick={handleCopyLink}>
+              <ListItemIcon>
+                <LinkIcon fontSize="small" />
+              </ListItemIcon>
+              <ListItemText>Copy Link</ListItemText>
+            </MenuItem>
+            <MenuItem onClick={handleReportOpen}>
+              <ListItemIcon>
+                <ReportIcon fontSize="small" />
+              </ListItemIcon>
+              <ListItemText>Report Page</ListItemText>
+            </MenuItem>
+          </Menu>
+          
           {/* Profile Avatar */}
           <Avatar 
             sx={{ 
@@ -381,6 +546,53 @@ export default function UserLinksPage() {
             Created with Creatorino
           </Typography>
         </Box>
+        
+        {/* Simplified Report Dialog */}
+        <Dialog 
+          open={reportDialogOpen} 
+          onClose={handleReportClose}
+          maxWidth="xs"
+          fullWidth
+        >
+          <DialogTitle>Report this page</DialogTitle>
+          <DialogContent>
+            <Typography variant="body1" gutterBottom>
+              Are you sure you want to report this page for inappropriate content or behavior?
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Reports help us maintain a safe and welcoming community. Thank you for your feedback.
+            </Typography>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleReportClose} disabled={isSubmitting}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleSubmitReport} 
+              variant="contained" 
+              color="primary"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? 'Submitting...' : 'Report Page'}
+            </Button>
+          </DialogActions>
+        </Dialog>
+        
+        {/* Success/Error Snackbar */}
+        <Snackbar 
+          open={snackbar.open} 
+          autoHideDuration={6000} 
+          onClose={handleSnackbarClose}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        >
+          <Alert 
+            onClose={handleSnackbarClose} 
+            severity={snackbar.severity}
+            variant="filled"
+          >
+            {snackbar.message}
+          </Alert>
+        </Snackbar>
       </Box>
     </>
   );

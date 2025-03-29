@@ -4,6 +4,7 @@ import { Box, AppBar, Container, Toolbar, Typography, Button, Tooltip, IconButto
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { supabase } from '../lib/supabaseClient';
+import { getCachedAvatar, cacheAvatar, preloadAvatar } from '../lib/avatarCache';
 import SettingsIcon from '@mui/icons-material/Settings';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import LogoutIcon from '@mui/icons-material/Logout';
@@ -11,7 +12,6 @@ import MenuIcon from '@mui/icons-material/Menu';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import Link from 'next/link';
 import Logo from './Logo';
-import { getCachedAvatar, cacheAvatar, preloadAvatar } from '../lib/avatarCache';
 
 // Updated nav links - removed About, added Features and Pricing
 const navLinks = [
@@ -27,8 +27,11 @@ export default function Layout({ children, title = 'Creatorino' }) {
   const [loading, setLoading] = useState(true);
   const [anchorElUser, setAnchorElUser] = useState(null);
   const [anchorElNav, setAnchorElNav] = useState(null);
+  
+  // Avatar state - moved directly into component
+  const [avatarUrl, setAvatarUrl] = useState(null);
   const [isAvatarLoaded, setIsAvatarLoaded] = useState(false);
-  const [cachedAvatarUrl, setCachedAvatarUrl] = useState(null);
+  const [userInitials, setUserInitials] = useState('U');
 
   // Fetch session and profile when component mounts
   useEffect(() => {
@@ -65,30 +68,59 @@ export default function Layout({ children, title = 'Creatorino' }) {
     };
   }, []);
 
-  // Try to get cached avatar when session is available
+  // Avatar handling - moved from AvatarContext
   useEffect(() => {
-    if (session?.user?.id) {
-      const cached = getCachedAvatar(session.user.id);
-      if (cached) {
-        setCachedAvatarUrl(cached);
-        // Preload the image
-        preloadAvatar(cached)
-          .then(() => setIsAvatarLoaded(true))
-          .catch(() => setIsAvatarLoaded(false)); // Reset if there's an error loading
-      }
+    if (!session?.user) return;
+
+    // Calculate user initials
+    const initials = getUserInitials(session.user);
+    setUserInitials(initials);
+
+    // Try to get avatar from localStorage cache first for immediate display
+    const cached = getCachedAvatar(session.user.id);
+    if (cached) {
+      setAvatarUrl(cached);
+      // Preload the image
+      preloadAvatar(cached)
+        .then(() => setIsAvatarLoaded(true))
+        .catch(() => setIsAvatarLoaded(false));
     }
+
+    // Then fetch the profile to check for updated avatar
+    const fetchProfileAvatar = async () => {
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('avatar_url')
+        .eq('id', session.user.id)
+        .single();
+
+      if (profileData?.avatar_url) {
+        setAvatarUrl(profileData.avatar_url);
+        cacheAvatar(session.user.id, profileData.avatar_url);
+        setIsAvatarLoaded(true);
+      }
+    };
+
+    fetchProfileAvatar();
   }, [session]);
 
-  // Update cache when profile changes
-  useEffect(() => {
-    if (profile?.avatar_url && session?.user?.id) {
-      // Only update cache if the URL has changed
-      if (cachedAvatarUrl !== profile.avatar_url) {
-        cacheAvatar(session.user.id, profile.avatar_url);
-        setCachedAvatarUrl(profile.avatar_url);
-      }
+  // Helper function to get user initials - moved from AvatarContext
+  const getUserInitials = (user) => {
+    if (user.user_metadata?.full_name) {
+      return user.user_metadata.full_name
+        .split(' ')
+        .map(part => part[0])
+        .join('')
+        .toUpperCase()
+        .substring(0, 2);
     }
-  }, [profile, session, cachedAvatarUrl]);
+    
+    if (user.email) {
+      return user.email.charAt(0).toUpperCase();
+    }
+    
+    return 'U';
+  };
 
   const handleOpenUserMenu = (event) => {
     setAnchorElUser(event.currentTarget);
@@ -197,58 +229,40 @@ export default function Layout({ children, title = 'Creatorino' }) {
                   <Box sx={{ display: 'flex', alignItems: 'center' }}>
                     <Tooltip title="Open settings">
                       <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
-                        {(profile?.avatar_url || cachedAvatarUrl) ? (
-                          <Box sx={{ position: 'relative', width: 48, height: 48 }}>
-                            {/* Show initials as fallback while image loads */}
-                            {!isAvatarLoaded && (
-                              <Avatar 
-                                sx={{ 
-                                  width: 48, 
-                                  height: 48, 
-                                  bgcolor: 'primary.main',
-                                  border: '2px solid',
-                                  borderColor: 'primary.light',
-                                  fontSize: '1.5rem',
-                                  position: 'absolute',
-                                  top: 0,
-                                  left: 0
-                                }}
-                              >
-                                {(profile?.first_name?.charAt(0) || session?.user?.email?.charAt(0) || 'U').toUpperCase()}
-                              </Avatar>
-                            )}
+                        <Box sx={{ position: 'relative', width: 48, height: 48 }}>
+                          {!isAvatarLoaded && (
                             <Avatar 
-                              src={profile?.avatar_url || cachedAvatarUrl}
-                              alt={profile?.first_name || session?.user?.email || 'User'}
-                              onLoad={() => setIsAvatarLoaded(true)}
-                              onError={() => setIsAvatarLoaded(false)}
                               sx={{ 
                                 width: 48, 
-                                height: 48,
+                                height: 48, 
+                                bgcolor: 'primary.main',
                                 border: '2px solid',
                                 borderColor: 'primary.light',
-                                opacity: isAvatarLoaded ? 1 : 0,
-                                transition: 'opacity 0.2s ease-in',
+                                fontSize: '1.5rem',
                                 position: 'absolute',
                                 top: 0,
                                 left: 0
                               }}
-                            />
-                          </Box>
-                        ) : (
+                            >
+                              {userInitials}
+                            </Avatar>
+                          )}
                           <Avatar 
+                            src={avatarUrl}
+                            alt="Profile picture"
                             sx={{ 
                               width: 48, 
-                              height: 48, 
-                              bgcolor: 'primary.main',
+                              height: 48,
                               border: '2px solid',
                               borderColor: 'primary.light',
-                              fontSize: '1.5rem'
+                              opacity: isAvatarLoaded ? 1 : 0,
+                              transition: 'opacity 0.2s ease-in',
+                              position: 'absolute',
+                              top: 0,
+                              left: 0
                             }}
-                          >
-                            {(profile?.first_name?.charAt(0) || session?.user?.email?.charAt(0) || 'U').toUpperCase()}
-                          </Avatar>
-                        )}
+                          />
+                        </Box>
                       </IconButton>
                     </Tooltip>
                     <Menu

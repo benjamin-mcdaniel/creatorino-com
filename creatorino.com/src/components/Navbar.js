@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { supabase } from '../lib/supabaseClient';
+import { getCachedAvatar, cacheAvatar, preloadAvatar } from '../lib/avatarCache';
 import {
   AppBar,
   Toolbar,
@@ -31,21 +32,17 @@ export default function Navbar() {
   const router = useRouter();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-  const [userInitial, setUserInitial] = useState('');
+  
+  // Avatar state - moved directly into component
+  const [avatarUrl, setAvatarUrl] = useState(null);
+  const [isAvatarLoaded, setIsAvatarLoaded] = useState(false);
+  const [userInitials, setUserInitials] = useState('U');
 
   useEffect(() => {
     // Get current session
     const fetchSession = async () => {
       const { data } = await supabase.auth.getSession();
       setSession(data.session);
-      
-      if (data.session?.user) {
-        const email = data.session.user.email;
-        if (email) {
-          setUserInitial(email.charAt(0).toUpperCase());
-        }
-      }
-      
       setLoading(false);
     };
 
@@ -55,12 +52,6 @@ export default function Navbar() {
     const { data: authListener } = supabase.auth.onAuthStateChange(
       (_event, session) => {
         setSession(session);
-        if (session?.user) {
-          const email = session.user.email;
-          if (email) {
-            setUserInitial(email.charAt(0).toUpperCase());
-          }
-        }
       }
     );
 
@@ -68,6 +59,60 @@ export default function Navbar() {
       authListener.subscription.unsubscribe();
     };
   }, []);
+
+  // Avatar handling - moved from AvatarContext
+  useEffect(() => {
+    if (!session?.user) return;
+
+    // Calculate user initials
+    const initials = getUserInitials(session.user);
+    setUserInitials(initials);
+
+    // Try to get avatar from localStorage cache first for immediate display
+    const cached = getCachedAvatar(session.user.id);
+    if (cached) {
+      setAvatarUrl(cached);
+      // Preload the image
+      preloadAvatar(cached)
+        .then(() => setIsAvatarLoaded(true))
+        .catch(() => setIsAvatarLoaded(false));
+    }
+
+    // Then fetch the profile to check for updated avatar
+    const fetchProfileAvatar = async () => {
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('avatar_url')
+        .eq('id', session.user.id)
+        .single();
+
+      if (profileData?.avatar_url) {
+        setAvatarUrl(profileData.avatar_url);
+        cacheAvatar(session.user.id, profileData.avatar_url);
+        setIsAvatarLoaded(true);
+      }
+    };
+
+    fetchProfileAvatar();
+  }, [session]);
+
+  // Helper function to get user initials - moved from AvatarContext
+  const getUserInitials = (user) => {
+    if (user.user_metadata?.full_name) {
+      return user.user_metadata.full_name
+        .split(' ')
+        .map(part => part[0])
+        .join('')
+        .toUpperCase()
+        .substring(0, 2);
+    }
+    
+    if (user.email) {
+      return user.email.charAt(0).toUpperCase();
+    }
+    
+    return 'U';
+  };
 
   const handleProfileMenuOpen = (event) => {
     setProfileMenuAnchor(event.currentTarget);
@@ -93,7 +138,7 @@ export default function Navbar() {
   ];
 
   return (
-    <AppBar position="static" color="default" elevation={0} sx={{ borderBottom: '1px solid', borderColor: 'divider' }}>
+    <AppBar position="sticky" color="default" elevation={0} sx={{ borderBottom: '1px solid #E0E0E0' }}>
       <Toolbar sx={{ py: 1 }}>
         {/* Logo on the left */}
         <Link href="/" passHref style={{ textDecoration: 'none', color: 'inherit', display: 'flex', alignItems: 'center' }}>
@@ -171,7 +216,7 @@ export default function Navbar() {
             {/* Profile avatar button */}
             {session && (
               <>
-                <IconButton 
+                <IconButton
                   onClick={handleProfileMenuOpen}
                   size="small"
                   sx={{ 
@@ -179,9 +224,36 @@ export default function Navbar() {
                     borderColor: 'primary.light',
                   }}
                 >
-                  <Avatar sx={{ width: 32, height: 32, bgcolor: 'primary.main', fontSize: '0.875rem' }}>
-                    {userInitial}
-                  </Avatar>
+                  <Box sx={{ position: 'relative', width: 32, height: 32 }}>
+                    {!isAvatarLoaded && (
+                      <Avatar 
+                        sx={{ 
+                          width: 32, 
+                          height: 32, 
+                          bgcolor: 'primary.main', 
+                          fontSize: '0.875rem',
+                          position: 'absolute',
+                          top: 0,
+                          left: 0
+                        }}
+                      >
+                        {userInitials}
+                      </Avatar>
+                    )}
+                    <Avatar 
+                      src={avatarUrl}
+                      alt="Profile picture"
+                      sx={{ 
+                        width: 32, 
+                        height: 32,
+                        opacity: isAvatarLoaded ? 1 : 0,
+                        transition: 'opacity 0.2s ease-in',
+                        position: 'absolute',
+                        top: 0,
+                        left: 0
+                      }}
+                    />
+                  </Box>
                 </IconButton>
                 <Menu
                   anchorEl={profileMenuAnchor}
