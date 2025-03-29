@@ -11,3 +11,4 @@
 2. creator search, editor search
 3. better profile and dashboard tooling so there can be creator editor and manager dashboards.
 4. remove yt twitch and merge it into overview and call it metrics or stats or audiance
+5. way to update supabase from cli and not from copy paste ops
