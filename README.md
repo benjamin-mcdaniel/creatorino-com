@@ -7,4 +7,7 @@
 3. social page also gets banner some how
 
 # big features
-1. 
+1. content pipelines that creators can setup and editors can see as a work target
+2. creator search, editor search
+3. better profile and dashboard tooling so there can be creator editor and manager dashboards.
+4. remove yt twitch and merge it into overview and call it metrics or stats or audiance
