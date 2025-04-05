@@ -45,6 +45,7 @@ export async function fetchProfileFromWorker() {
       nickname: '',
       bio: '',
       avatar_url: '',
+      avatar_url_small: '', // Add support for small avatar URL
       updated_at: new Date().toISOString()
     };
     

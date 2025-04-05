@@ -5,6 +5,7 @@ import EqualizerIcon from '@mui/icons-material/Equalizer';
 import YouTubeIcon from '@mui/icons-material/YouTube';
 import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
 import LinkIcon from '@mui/icons-material/Link';
+import SupervisedUserCircleIcon from '@mui/icons-material/SupervisedUserCircle';
 import { fetchUserProfile } from '../../lib/profileService';
 import { useRouter } from 'next/router';
 
@@ -13,6 +14,7 @@ import Overview from './Overview';
 import YouTube from './YouTube';
 import Twitch from './Twitch';
 import SocialLinks from './SocialLinks';
+import DirectoryTab from '../DirectoryTab';
 
 // Create a custom styled Tab component
 const StyledTab = styled(Tab)(({ theme }) => ({
@@ -38,7 +40,7 @@ export default function DashboardContent({ user }) {
     // First check URL query parameter
     if (router.query.tab) {
       const tabIndex = parseInt(router.query.tab, 10);
-      if (!isNaN(tabIndex) && tabIndex >= 0 && tabIndex <= 3) {
+      if (!isNaN(tabIndex) && tabIndex >= 0 && tabIndex <= 4) {
         setActiveTab(tabIndex);
       }
     } 
@@ -114,7 +116,8 @@ export default function DashboardContent({ user }) {
             <StyledTab icon={<EqualizerIcon />} label="Overview" />
             <StyledTab icon={<YouTubeIcon />} label="YouTube" />
             <StyledTab icon={<SportsEsportsIcon />} label="Twitch" />
-            <StyledTab icon={<LinkIcon />} label="Social Links" />
+            <StyledTab icon={<LinkIcon />} label="Profile Editor" />
+            <StyledTab icon={<SupervisedUserCircleIcon />} label="Directory" />
           </Tabs>
         </Box>
 
@@ -124,6 +127,7 @@ export default function DashboardContent({ user }) {
           {activeTab === 1 && <YouTube />}
           {activeTab === 2 && <Twitch />}
           {activeTab === 3 && <SocialLinks />}
+          {activeTab === 4 && <DirectoryTab />}
         </Box>
       </Container>
     </Box>

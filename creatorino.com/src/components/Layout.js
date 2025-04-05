@@ -4,7 +4,7 @@ import { Box, AppBar, Container, Toolbar, Typography, Button, Tooltip, IconButto
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { supabase } from '../lib/supabaseClient';
-import { getCachedAvatar, cacheAvatar, preloadAvatar } from '../lib/avatarCache';
+import { getCachedAvatar, cacheAvatar, preloadAvatar, getAvatarUrl } from '../lib/avatarService';
 import SettingsIcon from '@mui/icons-material/Settings';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import LogoutIcon from '@mui/icons-material/Logout';
@@ -72,35 +72,57 @@ export default function Layout({ children, title = 'Creatorino' }) {
   useEffect(() => {
     if (!session?.user) return;
 
-    // Calculate user initials
+    // Calculate user initials as fallback
     const initials = getUserInitials(session.user);
     setUserInitials(initials);
 
-    // Try to get avatar from localStorage cache first for immediate display
-    const cached = getCachedAvatar(session.user.id);
+    // First, try to get profile data directly to get the latest avatar
+    const fetchProfileAvatar = async () => {
+      try {
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('avatar_url, avatar_url_small')
+          .eq('id', session.user.id)
+          .single();
+
+        // Use small avatar if available, otherwise use the regular one
+        const avatarToUse = getAvatarUrl(profileData, true);
+        
+        if (avatarToUse) {
+          setAvatarUrl(avatarToUse);
+          // Cache the avatar for future use
+          cacheAvatar(session.user.id, avatarToUse, true);
+          
+          // Preload image to see if it loads successfully
+          preloadAvatar(avatarToUse)
+            .then(() => {
+              setIsAvatarLoaded(true);
+            })
+            .catch(() => {
+              console.log('Failed to load avatar, falling back to initials');
+              setIsAvatarLoaded(false);
+            });
+        } else {
+          // No avatar URL found
+          setIsAvatarLoaded(false);
+        }
+      } catch (error) {
+        console.error('Error fetching profile avatar:', error);
+        setIsAvatarLoaded(false);
+      }
+    };
+
+    // Try to get avatar from localStorage cache while fetching from database
+    const cached = getCachedAvatar(session.user.id, true);
     if (cached) {
       setAvatarUrl(cached);
-      // Preload the image
+      // Still preload to verify the cached URL is valid
       preloadAvatar(cached)
         .then(() => setIsAvatarLoaded(true))
         .catch(() => setIsAvatarLoaded(false));
     }
-
-    // Then fetch the profile to check for updated avatar
-    const fetchProfileAvatar = async () => {
-      const { data: profileData } = await supabase
-        .from('profiles')
-        .select('avatar_url')
-        .eq('id', session.user.id)
-        .single();
-
-      if (profileData?.avatar_url) {
-        setAvatarUrl(profileData.avatar_url);
-        cacheAvatar(session.user.id, profileData.avatar_url);
-        setIsAvatarLoaded(true);
-      }
-    };
-
+    
+    // Always fetch the latest from the database
     fetchProfileAvatar();
   }, [session]);
 
@@ -230,38 +252,23 @@ export default function Layout({ children, title = 'Creatorino' }) {
                     <Tooltip title="Open settings">
                       <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
                         <Box sx={{ position: 'relative', width: 48, height: 48 }}>
-                          {!isAvatarLoaded && (
-                            <Avatar 
-                              sx={{ 
-                                width: 48, 
-                                height: 48, 
-                                bgcolor: 'primary.main',
-                                border: '2px solid',
-                                borderColor: 'primary.light',
-                                fontSize: '1.5rem',
-                                position: 'absolute',
-                                top: 0,
-                                left: 0
-                              }}
-                            >
-                              {userInitials}
-                            </Avatar>
-                          )}
                           <Avatar 
                             src={avatarUrl}
-                            alt="Profile picture"
+                            alt={userInitials}
                             sx={{ 
                               width: 48, 
                               height: 48,
+                              bgcolor: 'primary.main',
                               border: '2px solid',
                               borderColor: 'primary.light',
-                              opacity: isAvatarLoaded ? 1 : 0,
-                              transition: 'opacity 0.2s ease-in',
-                              position: 'absolute',
-                              top: 0,
-                              left: 0
+                              fontSize: '1.5rem',
                             }}
-                          />
+                            imgProps={{
+                              onError: () => setIsAvatarLoaded(false)
+                            }}
+                          >
+                            {!isAvatarLoaded && userInitials}
+                          </Avatar>
                         </Box>
                       </IconButton>
                     </Tooltip>
@@ -300,7 +307,7 @@ export default function Layout({ children, title = 'Creatorino' }) {
                         <ListItemIcon>
                           <SettingsIcon fontSize="small" />
                         </ListItemIcon>
-                        <ListItemText>Settings</ListItemText>
+                        <ListItemText>Profile Editor</ListItemText>
                       </MenuItem>
                       <MenuItem 
                         onClick={() => {

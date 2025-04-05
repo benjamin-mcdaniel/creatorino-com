@@ -4,6 +4,8 @@
 import React, { useState, useEffect } from 'react';
 import Layout from './Layout';
 import { supabase } from '../lib/supabaseClient';
+// Import our new avatar service
+import { uploadAndProcessAvatar } from '../lib/avatarService';
 // Import the worker API client instead of directly using profileService
 import { fetchProfileFromWorker, updateProfileWithWorker } from '../lib/workerApiClient';
 // Keep the auth services for now as they're not yet moved to the worker
@@ -56,12 +58,14 @@ export default function ProfileContent() {
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false); // New state for avatar upload
   const [profile, setProfile] = useState({
     first_name: '',
     last_name: '',
     nickname: '',
     bio: '',
-    avatar_url: ''
+    avatar_url: '',
+    avatar_url_small: '' // Add small avatar URL
   });
   const [editMode, setEditMode] = useState(false);
   const [currentTab, setCurrentTab] = useState(0);
@@ -220,13 +224,38 @@ export default function ProfileContent() {
         throw new Error(result.error.message || 'Failed to update profile');
       }
       
-      // Note: Avatar upload is not yet implemented in the worker
+      // Process and upload avatar if provided
       if (avatarFile) {
-        // TODO: Implement avatar upload in the worker API
-        setMessage({ 
-          type: 'warning', 
-          text: 'Avatar upload will be available soon. Profile details have been updated.' 
-        });
+        try {
+          setUploadingAvatar(true);
+          
+          // Use our new avatar service to process and upload the image
+          const avatarResult = await uploadAndProcessAvatar(avatarFile);
+          
+          if (avatarResult.success) {
+            console.log('Avatar uploaded successfully:', avatarResult);
+            
+            // Update profile with new avatar URLs
+            setProfile(prev => ({
+              ...prev,
+              avatar_url: avatarResult.avatar_url,
+              avatar_url_small: avatarResult.avatar_url_small
+            }));
+            
+            setMessage({ type: 'success', text: 'Profile and avatar updated successfully!' });
+          } else {
+            throw new Error('Avatar upload failed');
+          }
+        } catch (avatarError) {
+          console.error('Error uploading avatar:', avatarError);
+          // Still proceed with profile save, but show a warning
+          setMessage({ 
+            type: 'warning', 
+            text: `Profile updated but avatar upload failed: ${avatarError.message}` 
+          });
+        } finally {
+          setUploadingAvatar(false);
+        }
       } else {
         setMessage({ type: 'success', text: 'Profile updated successfully!' });
       }
@@ -478,8 +507,13 @@ export default function ProfileContent() {
                             bgcolor: 'primary.dark',
                           }
                         }}
+                        disabled={uploadingAvatar}
                       >
-                        <PhotoCameraIcon />
+                        {uploadingAvatar ? (
+                          <CircularProgress size={20} color="inherit" />
+                        ) : (
+                          <PhotoCameraIcon />
+                        )}
                       </IconButton>
                     </label>
                   )}
@@ -657,9 +691,9 @@ export default function ProfileContent() {
                           <Button
                             variant="contained"
                             color="primary"
-                            startIcon={saving ? <CircularProgress size={20} color="inherit" /> : <SaveIcon />}
+                            startIcon={saving || uploadingAvatar ? <CircularProgress size={20} color="inherit" /> : <SaveIcon />}
                             onClick={handleSaveProfile}
-                            disabled={saving}
+                            disabled={saving || uploadingAvatar}
                             className="relative justify-center cursor-pointer inline-flex items-center space-x-2 text-center font-regular ease-out duration-200 rounded-md outline-none transition-all outline-0 focus-visible:outline-4 focus-visible:outline-offset-1 border hover:bg-opacity-80 focus-visible:outline-primary-600 text-sm px-4 py-2"
                             sx={{ 
                               borderColor: 'primary.500',
@@ -672,7 +706,9 @@ export default function ProfileContent() {
                               py: 0.5 // Reduced vertical padding
                             }}
                           >
-                            <span className="truncate">{saving ? 'Saving...' : 'Save Changes'}</span>
+                            <span className="truncate">
+                              {saving || uploadingAvatar ? 'Saving...' : 'Save Changes'}
+                            </span>
                           </Button>
                         </Link>
                       </Box>
