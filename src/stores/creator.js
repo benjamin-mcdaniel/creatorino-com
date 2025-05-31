@@ -287,17 +287,23 @@ export const useCreatorStore = defineStore('creator', {
       } finally {
         this.loading = false
       }
-    },
-
-    async fetchCreatorById(id) {
+    },    async fetchCreatorById(id) {
       this.loading = true
+      this.error = null
       try {
-        this.currentCreator = this.creators.find(c => c.id === id)
+        // If creators array is empty, fetch creators first
+        if (this.creators.length === 0) {
+          await this.fetchCreators()
+        }
+        
+        // Find the creator by id (convert to string since route params are strings)
+        this.currentCreator = this.creators.find(c => c.id === String(id))
         if (!this.currentCreator) {
           throw new Error('Creator not found')
         }
       } catch (err) {
         this.error = err.message
+        this.currentCreator = null
       } finally {
         this.loading = false
       }

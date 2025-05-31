@@ -1,16 +1,14 @@
 <!-- Timeline event card -->
 <template>  <div class="relative flex items-center">
-    <!-- Date positioned 45% down the vertical side of the event card, moved right to avoid intersecting vertical line -->
-    <div class="absolute left-12 top-8 text-xs text-gray-500 font-medium bg-white px-1">
+    <!-- Date positioned 45% down the vertical side of the event card, bigger and more visible -->
+    <div class="absolute left-12 top-8 text-sm text-gray-700 font-semibold bg-white px-2 py-1 rounded-md shadow-sm border border-gray-200">
       {{ formatTimestamp(event.date) }}
     </div>
     
-    <!-- Horizontal connecting line (back to original left position) -->
-    <div class="absolute left-4 w-28 h-0.5" :class="getEventLineClass(event.type)"></div>
-
-    <!-- Event content (moved further right to avoid intersection with vertical line) -->
+    <!-- Horizontal connecting line (thinner and softer) -->
+    <div class="absolute left-4 w-28 h-px" :class="getEventLineClass(event.type)"></div>    <!-- Event content (moved further right to avoid intersection with vertical line) -->
     <div class="ml-32 flex-1 min-w-0 pb-3">
-      <div class="bg-white border-2 rounded-md p-3 hover:shadow-sm transition-all" :class="getEventBorderClass(event.type)">
+      <div class="bg-white border rounded-lg p-4 hover:shadow-md transition-all" :class="getEventBorderClass(event.type)">
         <!-- Event header (condensed) -->
         <div class="flex items-start space-x-2 mb-2">
           <div class="w-8 h-8 rounded-md flex items-center justify-center flex-shrink-0" :class="getEventBgClass(event.type)">
@@ -172,24 +170,24 @@ const getEventIcon = (type) => {
 
 const getEventBgClass = (type) => {
   const classes = {
-    video_upload: 'bg-blue-100',
-    milestone: 'bg-primary-100',
-    collaboration: 'bg-purple-100',
-    announcement: 'bg-yellow-100',
-    stream: 'bg-red-100'
+    video_upload: 'bg-blue-50',
+    milestone: 'bg-green-50',
+    collaboration: 'bg-purple-50',
+    announcement: 'bg-yellow-50',
+    stream: 'bg-red-50'
   }
-  return classes[type] || 'bg-gray-100'
+  return classes[type] || 'bg-gray-50'
 }
 
 const getEventIconClass = (type) => {
   const classes = {
-    video_upload: 'text-blue-600',
-    milestone: 'text-primary-600',
-    collaboration: 'text-purple-600',
+    video_upload: 'text-blue-500',
+    milestone: 'text-green-500',
+    collaboration: 'text-purple-500',
     announcement: 'text-yellow-600',
-    stream: 'text-red-600'
+    stream: 'text-red-500'
   }
-  return classes[type] || 'text-gray-600'
+  return classes[type] || 'text-gray-500'
 }
 
 const getEventDotClass = (type) => {
@@ -205,24 +203,24 @@ const getEventDotClass = (type) => {
 
 const getEventLineClass = (type) => {
   const classes = {
-    video_upload: 'bg-blue-500',
-    milestone: 'bg-primary-500',
-    collaboration: 'bg-purple-500',
-    announcement: 'bg-yellow-500',
-    stream: 'bg-red-500'
+    video_upload: 'bg-blue-300',
+    milestone: 'bg-green-300',
+    collaboration: 'bg-purple-300',
+    announcement: 'bg-yellow-300',
+    stream: 'bg-red-300'
   }
-  return classes[type] || 'bg-gray-300'
+  return classes[type] || 'bg-gray-200'
 }
 
 const getEventBorderClass = (type) => {
   const classes = {
-    video_upload: 'border-blue-500',
-    milestone: 'border-primary-500',
-    collaboration: 'border-purple-500',
-    announcement: 'border-yellow-500',
-    stream: 'border-red-500'
+    video_upload: 'border-blue-200',
+    milestone: 'border-green-200',
+    collaboration: 'border-purple-200',
+    announcement: 'border-yellow-200',
+    stream: 'border-red-200'
   }
-  return classes[type] || 'border-gray-300'
+  return classes[type] || 'border-gray-200'
 }
 
 const formatMetricValue = (value) => {
