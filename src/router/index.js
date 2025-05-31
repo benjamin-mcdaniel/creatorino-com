@@ -12,26 +12,24 @@ const routes = [
     path: '/creator/:id',
     name: 'creator',
     component: CreatorPage
-  },
-  {
+  },  {
     path: '/trending',
     name: 'trending',
     component: () => import('../pages/TrendingPage.vue')
   },
   {
+    path: '/recent-activity',
+    name: 'recent-activity',
+    component: () => import('../pages/RecentActivityPage.vue')
+  },
+  {
     path: '/youtube',
     name: 'youtube',
     component: () => import('../pages/YoutubePage.vue')
-  },
-  {
+  },{
     path: '/twitch',
     name: 'twitch',
     component: () => import('../pages/TwitchPage.vue')
-  },
-  {
-    path: '/insights',
-    name: 'insights',
-    component: () => import('../pages/InsightsPage.vue')
   },
   {
     path: '/comparisons',
