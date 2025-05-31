@@ -1,5 +1,5 @@
 <template>
-  <header class="bg-white border-b border-gray-200 sticky top-0 z-50">
+  <header class="bg-white border-b-2 border-primary-500 sticky top-0 z-50">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex items-center justify-between h-16">
         <!-- Logo -->
@@ -25,16 +25,16 @@
               @blur="hideDropdownDelayed"
               type="text"
               placeholder="Search creators..."
-              class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg bg-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+              class="block w-full pl-10 pr-3 py-2 border-2 border-primary-300 rounded-lg bg-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
             >
             
             <!-- Search Dropdown -->
             <div v-show="showDropdown && (searchResults.length > 0 || searchQuery.length > 0)" 
-                 class="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-96 overflow-y-auto">
+                 class="absolute z-50 w-full mt-1 bg-white border-2 border-primary-200 rounded-lg shadow-lg max-h-96 overflow-y-auto">
               
               <!-- Search Results -->
               <div v-if="searchResults.length > 0" class="py-1">
-                <div class="px-3 py-2 text-xs text-gray-500 font-medium uppercase tracking-wide border-b border-gray-100">
+                <div class="px-3 py-2 text-xs text-gray-500 font-medium uppercase tracking-wide border-b-2 border-primary-100">
                   Creators
                 </div>
                 <router-link
@@ -56,7 +56,7 @@
                   </div>
                 </router-link>
                 
-                <div v-if="searchResults.length > 5" class="px-3 py-2 text-sm text-gray-500 border-t border-gray-100">
+                <div v-if="searchResults.length > 5" class="px-3 py-2 text-sm text-gray-500 border-t-2 border-primary-100">
                   {{ searchResults.length - 5 }} more results...
                 </div>
               </div>
@@ -113,7 +113,7 @@
       </div>
 
       <!-- Mobile menu -->
-      <div v-show="mobileMenuOpen" class="md:hidden border-t border-gray-200">
+      <div v-show="mobileMenuOpen" class="md:hidden border-t-2 border-primary-200">
         <div class="py-2 space-y-1">
           <router-link to="/" 
             class="block px-3 py-2 text-base font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50"

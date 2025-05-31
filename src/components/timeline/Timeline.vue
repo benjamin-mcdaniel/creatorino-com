@@ -6,34 +6,32 @@
       <div class="flex items-center space-x-2">
         <button 
           @click="toggleFilter('all')"
-          :class="activeFilter === 'all' ? 'bg-primary-100 text-primary-700 border-primary-300' : 'bg-white text-gray-700 border-gray-300'"
+          :class="activeFilter === 'all' ? 'bg-primary-100 text-primary-700 border-2 border-primary-300' : 'bg-white text-gray-700 border-2 border-primary-300'"
           class="inline-flex items-center px-3 py-1.5 border text-xs font-medium rounded-md hover:bg-gray-50 transition-colors"
         >
           All
         </button>
         <button 
           @click="toggleFilter('video_upload')"
-          :class="activeFilter === 'video_upload' ? 'bg-primary-100 text-primary-700 border-primary-300' : 'bg-white text-gray-700 border-gray-300'"
+          :class="activeFilter === 'video_upload' ? 'bg-primary-100 text-primary-700 border-2 border-primary-300' : 'bg-white text-gray-700 border-2 border-primary-300'"
           class="inline-flex items-center px-3 py-1.5 border text-xs font-medium rounded-md hover:bg-gray-50 transition-colors"
         >
           Videos
         </button>
         <button 
           @click="toggleFilter('milestone')"
-          :class="activeFilter === 'milestone' ? 'bg-primary-100 text-primary-700 border-primary-300' : 'bg-white text-gray-700 border-gray-300'"
+          :class="activeFilter === 'milestone' ? 'bg-primary-100 text-primary-700 border-2 border-primary-300' : 'bg-white text-gray-700 border-2 border-primary-300'"
           class="inline-flex items-center px-3 py-1.5 border text-xs font-medium rounded-md hover:bg-gray-50 transition-colors"
         >
           Milestones
         </button>
       </div>
-    </div>
-    
-    <div class="relative">
-      <!-- Timeline line -->
-      <div class="absolute left-6 top-0 bottom-0 w-0.5 bg-gray-200"></div>
+    </div>      <div class="relative">
+      <!-- Timeline line (positioned to connect with header, darker for better visibility) -->
+      <div class="absolute left-4 -top-6 bottom-0 w-0.5 bg-gray-600"></div>
       
       <!-- Timeline events -->
-      <div class="space-y-6">
+      <div class="space-y-3">
         <TimelineEvent 
           v-for="event in filteredEvents" 
           :key="event.id" 
@@ -47,7 +45,7 @@
       <button 
         @click="loadMoreEvents"
         :disabled="loadingMore"
-        class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors disabled:opacity-50"
+        class="inline-flex items-center px-4 py-2 border-2 border-primary-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors disabled:opacity-50"
       >
         <svg v-if="loadingMore" class="animate-spin -ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24">
           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>

@@ -1,68 +1,61 @@
 <!-- Timeline event card -->
-<template>
-  <div class="relative flex items-start space-x-4">
-    <!-- Timeline dot -->
-    <div class="relative flex items-center justify-center">
-      <div class="w-3 h-3 rounded-full border-2 border-white bg-primary-500 z-10 shadow-sm" 
-           :class="getEventDotClass(event.type)"></div>
+<template>  <div class="relative flex items-center">
+    <!-- Date positioned 45% down the vertical side of the event card, moved right to avoid intersecting vertical line -->
+    <div class="absolute left-12 top-8 text-xs text-gray-500 font-medium bg-white px-1">
+      {{ formatTimestamp(event.date) }}
     </div>
+    
+    <!-- Horizontal connecting line (back to original left position) -->
+    <div class="absolute left-4 w-28 h-0.5" :class="getEventLineClass(event.type)"></div>
 
-    <!-- Event content -->
-    <div class="flex-1 min-w-0 pb-6">
-      <div class="bg-white border border-gray-200 rounded-lg p-6 hover:border-gray-300 hover:shadow-sm transition-all">
-        <!-- Event header -->
-        <div class="flex items-start justify-between mb-3">
-          <div class="flex items-start space-x-3">
-            <div class="w-10 h-10 rounded-lg flex items-center justify-center" :class="getEventBgClass(event.type)">
-              <component :is="getEventIcon(event.type)" :class="getEventIconClass(event.type)" />
-            </div>
-            <div class="flex-1 min-w-0">
-              <h3 class="text-base font-semibold text-gray-900 mb-1">{{ event.title }}</h3>
-              <p class="text-sm text-gray-600 leading-relaxed">{{ event.description }}</p>
-            </div>
+    <!-- Event content (moved further right to avoid intersection with vertical line) -->
+    <div class="ml-32 flex-1 min-w-0 pb-3">
+      <div class="bg-white border-2 rounded-md p-3 hover:shadow-sm transition-all" :class="getEventBorderClass(event.type)">
+        <!-- Event header (condensed) -->
+        <div class="flex items-start space-x-2 mb-2">
+          <div class="w-8 h-8 rounded-md flex items-center justify-center flex-shrink-0" :class="getEventBgClass(event.type)">
+            <component :is="getEventIcon(event.type)" :class="getEventIconClass(event.type)" />
           </div>
-          <div class="flex items-center space-x-2 text-xs text-gray-500">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-            </svg>
-            <span>{{ formatTimestamp(event.date) }}</span>
+          <div class="flex-1 min-w-0">
+            <h3 class="text-sm font-semibold text-gray-900 mb-1 leading-tight">{{ event.title }}</h3>
+            <p class="text-xs text-gray-600 leading-relaxed">{{ event.description }}</p>
           </div>
         </div>
         
-        <!-- Video thumbnail for video uploads -->
-        <div v-if="event.type === 'video_upload' && event.thumbnail" class="mb-4">
+        <!-- Video thumbnail for video uploads (smaller) -->
+        <div v-if="event.type === 'video_upload' && event.thumbnail" class="mb-2">
           <img :src="event.thumbnail" :alt="event.title" 
-               class="w-full h-48 object-cover rounded-lg">
-          <div v-if="event.duration" class="absolute bottom-2 right-2 bg-black bg-opacity-75 text-white text-xs px-2 py-1 rounded">
+               class="w-full h-32 object-cover rounded-md">
+          <div v-if="event.duration" class="absolute bottom-1 right-1 bg-black bg-opacity-75 text-white text-xs px-1.5 py-0.5 rounded">
             {{ event.duration }}
           </div>
         </div>
         
-        <!-- Platform badge -->
-        <div class="flex items-center space-x-2 mb-4">
-          <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-red-100 text-red-800">
-            <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 24 24">
+        <!-- Platform badge (smaller) -->
+        <div class="flex items-center space-x-2 mb-2">
+          <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
+            <svg class="w-2.5 h-2.5 mr-1" fill="currentColor" viewBox="0 0 24 24">
               <path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/>
             </svg>
             YouTube
           </span>
-          <span v-if="event.type === 'stream'" class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-purple-100 text-purple-800">
+          <span v-if="event.type === 'stream'" class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800">
             Live Stream
           </span>
         </div>
         
-        <!-- Metrics -->
-        <div class="grid grid-cols-3 gap-4">
+        <!-- Metrics (more condensed) -->
+        <div class="grid grid-cols-3 gap-2">
           <div class="text-center">
-            <p class="text-lg font-semibold text-gray-900">{{ formatMetricValue(event.views) }}</p>
+            <p class="text-sm font-semibold text-gray-900">{{ formatMetricValue(event.views) }}</p>
             <p class="text-xs text-gray-500 uppercase tracking-wide">Views</p>
           </div>
           <div class="text-center">
-            <p class="text-lg font-semibold text-gray-900">{{ formatMetricValue(event.likes) }}</p>
+            <p class="text-sm font-semibold text-gray-900">{{ formatMetricValue(event.likes) }}</p>
             <p class="text-xs text-gray-500 uppercase tracking-wide">Likes</p>
           </div>
           <div class="text-center">
-            <p class="text-lg font-semibold text-gray-900">{{ formatMetricValue(event.comments) }}</p>
+            <p class="text-sm font-semibold text-gray-900">{{ formatMetricValue(event.comments) }}</p>
             <p class="text-xs text-gray-500 uppercase tracking-wide">Comments</p>
           </div>
         </div>
@@ -112,7 +105,7 @@ const getEventIcon = (type) => {
       fill: 'none', 
       stroke: 'currentColor', 
       viewBox: '0 0 24 24',
-      class: 'w-5 h-5'
+      class: 'w-4 h-4'
     }, [
       h('path', { 
         'stroke-linecap': 'round', 
@@ -125,7 +118,7 @@ const getEventIcon = (type) => {
       fill: 'none', 
       stroke: 'currentColor', 
       viewBox: '0 0 24 24',
-      class: 'w-5 h-5'
+      class: 'w-4 h-4'
     }, [
       h('path', { 
         'stroke-linecap': 'round', 
@@ -138,7 +131,7 @@ const getEventIcon = (type) => {
       fill: 'none', 
       stroke: 'currentColor', 
       viewBox: '0 0 24 24',
-      class: 'w-5 h-5'
+      class: 'w-4 h-4'
     }, [
       h('path', { 
         'stroke-linecap': 'round', 
@@ -151,7 +144,7 @@ const getEventIcon = (type) => {
       fill: 'none', 
       stroke: 'currentColor', 
       viewBox: '0 0 24 24',
-      class: 'w-5 h-5'
+      class: 'w-4 h-4'
     }, [
       h('path', { 
         'stroke-linecap': 'round', 
@@ -164,7 +157,7 @@ const getEventIcon = (type) => {
       fill: 'none', 
       stroke: 'currentColor', 
       viewBox: '0 0 24 24',
-      class: 'w-5 h-5'
+      class: 'w-4 h-4'
     }, [
       h('path', { 
         'stroke-linecap': 'round', 
@@ -208,6 +201,28 @@ const getEventDotClass = (type) => {
     stream: 'bg-red-500'
   }
   return classes[type] || 'bg-primary-500'
+}
+
+const getEventLineClass = (type) => {
+  const classes = {
+    video_upload: 'bg-blue-500',
+    milestone: 'bg-primary-500',
+    collaboration: 'bg-purple-500',
+    announcement: 'bg-yellow-500',
+    stream: 'bg-red-500'
+  }
+  return classes[type] || 'bg-gray-300'
+}
+
+const getEventBorderClass = (type) => {
+  const classes = {
+    video_upload: 'border-blue-500',
+    milestone: 'border-primary-500',
+    collaboration: 'border-purple-500',
+    announcement: 'border-yellow-500',
+    stream: 'border-red-500'
+  }
+  return classes[type] || 'border-gray-300'
 }
 
 const formatMetricValue = (value) => {
