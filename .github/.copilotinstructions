@@ -1,0 +1,27 @@
+# How to Build Creatorino - Content Creator Analytics Platform
+
+**Frontend (Cloudflare Pages)**: Build a lightweight React/Vue app with sidebar navigation, creator profile header, and vertical timeline component. Use Tailwind CSS for responsive design.
+
+**Backend (Cloudflare Workers)**: Create API endpoints for data fetching, YouTube API integration, and CRUD operations. Use Hono.js framework for routing and middleware.
+
+**Database Design (MongoDB)**: Use collection-per-creator approach: `creators` collection for profiles, `creator_analytics_{creatorId}` collections for individual timelines to handle thousands of entries efficiently.
+
+**Data Structure**: Creator profile stores name, platforms, stats summary. Analytics collections store timestamped entries with metrics, descriptions, and platform sources.
+
+**Timeline Component**: Build vertical timeline with date markers on left, expandable content cards on right. Implement virtualization for performance with large datasets.
+
+**Authentication**: we will add after, use a demo setup
+
+**API Endpoints**: we will create those later use demo data
+
+**Deployment**: Frontend on Cloudflare Pages with automatic builds, Workers for API, MongoDB Atlas for database. Use Cloudflare KV for caching frequently accessed data.
+
+**Future Scaling**: Design plugin system for new platforms (Twitch, TikTok). Each platform gets its own data fetcher worker and standardized data format for timeline consistency.
+
+**Performance**: Implement pagination for timeline (load 50 entries at a time), cache creator stats in KV store, use MongoDB indexes on creatorId and timestamp fields.
+
+**MVP Launch**: Start with manual creator onboarding, YouTube-only data, basic timeline and stats. Add user submissions and new platforms post-launch based on feedback.
+
+**framework** use vue and minimal packages, if one option is possible use it for multiple solutions. do not use multiple css solutions. 
+
+**terminal** && doesnt work in the terminal. 
