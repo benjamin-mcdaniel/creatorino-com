@@ -1,40 +1,36 @@
 <template>
   <header class="bg-white border-b-2 border-primary-500 sticky top-0 z-50">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex items-center justify-between h-16">
-        <!-- Logo -->
+      <div class="flex items-center justify-between h-16">        <!-- Logo -->
         <div class="flex items-center">
-          <router-link to="/" class="flex items-center space-x-3">
-            <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center">
-              <span class="text-white font-bold text-sm">C</span>
+          <router-link to="/" class="flex items-center space-x-4">
+            <div class="h-12 w-12 rounded-lg bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center">
+              <span class="text-white font-bold text-xl">C</span>
             </div>
-            <h1 class="text-xl font-semibold text-gray-900">Creatorino</h1>
+            <h1 class="text-2xl font-bold text-gray-900">Creatorino</h1>
           </router-link>
-        </div>        <!-- Search Bar -->
+        </div><!-- Search Bar -->
         <div class="flex-1 max-w-lg mx-8 relative">
-          <div class="relative">
-            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div class="relative">            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+              <svg class="h-6 w-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
               </svg>
-            </div>
-            <input
+            </div><input
               v-model="searchQuery"
               @input="handleSearchInput"
               @focus="showDropdown = true"
               @blur="hideDropdownDelayed"
               type="text"
               placeholder="Search creators..."
-              class="block w-full pl-10 pr-3 py-2 border-2 border-primary-300 rounded-lg bg-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+              class="block w-full pl-12 pr-4 py-3 border-2 border-primary-300 rounded-lg bg-white text-base placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
             >
             
             <!-- Search Dropdown -->
             <div v-show="showDropdown && (searchResults.length > 0 || searchQuery.length > 0)" 
                  class="absolute z-50 w-full mt-1 bg-white border-2 border-primary-200 rounded-lg shadow-lg max-h-96 overflow-y-auto">
-              
-              <!-- Search Results -->
+                <!-- Search Results -->
               <div v-if="searchResults.length > 0" class="py-1">
-                <div class="px-3 py-2 text-xs text-gray-500 font-medium uppercase tracking-wide border-b-2 border-primary-100">
+                <div class="px-4 py-3 text-sm text-gray-500 font-medium uppercase tracking-wide border-b-2 border-primary-100">
                   Creators
                 </div>
                 <router-link
@@ -42,11 +38,11 @@
                   :key="creator.id"
                   :to="`/creator/${creator.id}`"
                   @click="clearSearch"
-                  class="flex items-center px-3 py-2 hover:bg-gray-50 cursor-pointer"
+                  class="flex items-center px-4 py-3 hover:bg-gray-50 cursor-pointer"
                 >
-                  <img :src="creator.avatarUrl" :alt="creator.name" class="w-8 h-8 rounded-full mr-3">
+                  <img :src="creator.avatarUrl" :alt="creator.name" class="w-10 h-10 rounded-full mr-4">
                   <div class="flex-1 min-w-0">
-                    <div class="font-medium text-gray-900 truncate">{{ creator.name }}</div>
+                    <div class="font-semibold text-gray-900 truncate text-base">{{ creator.name }}</div>
                     <div class="text-sm text-gray-500 truncate">{{ creator.category }} • {{ formatNumber(creator.stats.subscribers) }} subscribers</div>
                   </div>
                   <div v-if="creator.verified" class="ml-2">
@@ -54,47 +50,43 @@
                       <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
                     </svg>
                   </div>
-                </router-link>
-                
-                <div v-if="searchResults.length > 5" class="px-3 py-2 text-sm text-gray-500 border-t-2 border-primary-100">
+                </router-link>                
+                <div v-if="searchResults.length > 5" class="px-4 py-3 text-base text-gray-500 border-t-2 border-primary-100">
                   {{ searchResults.length - 5 }} more results...
                 </div>
               </div>
               
               <!-- No Results -->
-              <div v-else-if="searchQuery.length > 0" class="px-3 py-4 text-sm text-gray-500 text-center">
+              <div v-else-if="searchQuery.length > 0" class="px-4 py-6 text-base text-gray-500 text-center">
                 No creators found for "{{ searchQuery }}"
               </div>
-              
-              <!-- Quick Actions -->
+                <!-- Quick Actions -->
               <div v-if="searchQuery.length === 0" class="py-1">
-                <div class="px-3 py-2 text-xs text-gray-500 font-medium uppercase tracking-wide">
+                <div class="px-4 py-3 text-sm text-gray-500 font-medium uppercase tracking-wide">
                   Quick Actions
-                </div>                <router-link to="/trending" class="flex items-center px-3 py-2 hover:bg-gray-50 cursor-pointer">
-                  <svg class="w-5 h-5 text-gray-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                </div>                <router-link to="/trending" class="flex items-center px-4 py-3 hover:bg-gray-50 cursor-pointer">
+                  <svg class="w-6 h-6 text-gray-400 mr-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
                   </svg>
-                  <span class="text-gray-700">View Trending</span>
+                  <span class="text-gray-700 text-base font-medium">View Trending</span>
                 </router-link>
               </div>
             </div>
           </div>
-        </div>
-
-        <!-- Navigation -->
+        </div>        <!-- Navigation -->
         <nav class="hidden md:flex items-center space-x-8">
           <router-link to="/" 
-            class="text-gray-600 hover:text-gray-900 px-3 py-2 text-sm font-medium transition-colors"
+            class="text-gray-600 hover:text-gray-900 px-3 py-2 text-base font-semibold transition-colors"
             :class="{ 'text-primary-600': $route.path === '/' }">
             Home
           </router-link>
           <router-link to="/trending" 
-            class="text-gray-600 hover:text-gray-900 px-3 py-2 text-sm font-medium transition-colors"
+            class="text-gray-600 hover:text-gray-900 px-3 py-2 text-base font-semibold transition-colors"
             :class="{ 'text-primary-600': $route.path === '/trending' }">
             Trending
           </router-link>
           <router-link to="/recent-activity" 
-            class="text-gray-600 hover:text-gray-900 px-3 py-2 text-sm font-medium transition-colors"
+            class="text-gray-600 hover:text-gray-900 px-3 py-2 text-base font-semibold transition-colors"
             :class="{ 'text-primary-600': $route.path === '/recent-activity' }">
             Recent Activity
           </router-link>

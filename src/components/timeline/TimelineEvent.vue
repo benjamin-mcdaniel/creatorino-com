@@ -7,54 +7,63 @@
     
     <!-- Horizontal connecting line (thinner and softer) -->
     <div class="absolute left-4 w-28 h-px" :class="getEventLineClass(event.type)"></div>    <!-- Event content (moved further right to avoid intersection with vertical line) -->
-    <div class="ml-32 flex-1 min-w-0 pb-3">
-      <div class="bg-white border rounded-lg p-4 hover:shadow-md transition-all" :class="getEventBorderClass(event.type)">
-        <!-- Event header (condensed) -->
-        <div class="flex items-start space-x-2 mb-2">
-          <div class="w-8 h-8 rounded-md flex items-center justify-center flex-shrink-0" :class="getEventBgClass(event.type)">
-            <component :is="getEventIcon(event.type)" :class="getEventIconClass(event.type)" />
-          </div>
-          <div class="flex-1 min-w-0">
-            <h3 class="text-sm font-semibold text-gray-900 mb-1 leading-tight">{{ event.title }}</h3>
-            <p class="text-xs text-gray-600 leading-relaxed">{{ event.description }}</p>
-          </div>
-        </div>
-        
-        <!-- Video thumbnail for video uploads (smaller) -->
-        <div v-if="event.type === 'video_upload' && event.thumbnail" class="mb-2">
-          <img :src="event.thumbnail" :alt="event.title" 
-               class="w-full h-32 object-cover rounded-md">
-          <div v-if="event.duration" class="absolute bottom-1 right-1 bg-black bg-opacity-75 text-white text-xs px-1.5 py-0.5 rounded">
-            {{ event.duration }}
-          </div>
-        </div>
-        
-        <!-- Platform badge (smaller) -->
-        <div class="flex items-center space-x-2 mb-2">
-          <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
-            <svg class="w-2.5 h-2.5 mr-1" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/>
-            </svg>
-            YouTube
-          </span>
-          <span v-if="event.type === 'stream'" class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800">
-            Live Stream
-          </span>
-        </div>
-        
-        <!-- Metrics (more condensed) -->
-        <div class="grid grid-cols-3 gap-2">
-          <div class="text-center">
-            <p class="text-sm font-semibold text-gray-900">{{ formatMetricValue(event.views) }}</p>
-            <p class="text-xs text-gray-500 uppercase tracking-wide">Views</p>
-          </div>
-          <div class="text-center">
-            <p class="text-sm font-semibold text-gray-900">{{ formatMetricValue(event.likes) }}</p>
-            <p class="text-xs text-gray-500 uppercase tracking-wide">Likes</p>
-          </div>
-          <div class="text-center">
-            <p class="text-sm font-semibold text-gray-900">{{ formatMetricValue(event.comments) }}</p>
-            <p class="text-xs text-gray-500 uppercase tracking-wide">Comments</p>
+    <div class="ml-32 flex-1 min-w-0 pb-3">      <div class="bg-white border rounded-lg p-4 hover:shadow-md transition-all" :class="getEventBorderClass(event.type)">
+        <!-- Main content container with image support -->
+        <div class="flex items-start space-x-4">
+          <!-- Left side: Text content -->
+          <div class="flex-1 min-w-0">            <!-- Event header - expanded to take more space -->
+            <div class="flex items-start space-x-2 mb-4">
+              <div class="w-8 h-8 rounded-md flex items-center justify-center flex-shrink-0" :class="getEventBgClass(event.type)">
+                <component :is="getEventIcon(event.type)" :class="getEventIconClass(event.type)" />
+              </div>              <div class="flex-1 min-w-0">
+                <h3 class="text-lg font-bold text-gray-900 mb-3 leading-tight">{{ event.title }}</h3>
+                <p class="text-sm text-gray-600 leading-relaxed mb-2">{{ event.description }}</p>
+              </div>
+            </div>
+
+            <!-- Metrics with platform badges inline -->
+            <div class="flex items-center justify-between">
+              <!-- Platform badges on the left -->
+              <div class="flex items-center space-x-2">
+                <span class="inline-flex items-center px-2 py-1 rounded text-sm font-medium bg-red-100 text-red-800">
+                  <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/>
+                  </svg>
+                  YouTube
+                </span>
+                <span v-if="event.type === 'stream'" class="inline-flex items-center px-2 py-1 rounded text-sm font-medium bg-purple-100 text-purple-800">
+                  Live Stream
+                </span>
+              </div>              <!-- Metrics on the right -->
+              <div class="flex items-center space-x-6">
+                <div class="text-left">
+                  <p class="text-base font-bold text-gray-900">{{ formatMetricValue(event.views) }}</p>
+                  <p class="text-sm text-gray-500 uppercase tracking-wide">Views</p>
+                </div>
+                <div class="text-left">
+                  <p class="text-base font-bold text-gray-900">{{ formatMetricValue(event.likes) }}</p>
+                  <p class="text-sm text-gray-500 uppercase tracking-wide">Likes</p>
+                </div>
+                <div class="text-left">
+                  <p class="text-base font-bold text-gray-900">{{ formatMetricValue(event.comments) }}</p>
+                  <p class="text-sm text-gray-500 uppercase tracking-wide">Comments</p>
+                </div>
+              </div>
+            </div>
+          </div>          <!-- Right side: Fixed-width image area (always present) -->
+          <div class="flex-shrink-0 w-72">
+            <!-- Large thumbnail for video uploads -->
+            <div v-if="event.type === 'video_upload' && event.thumbnail" class="relative">
+              <img :src="event.thumbnail" :alt="event.title" 
+                   class="w-72 h-54 object-cover rounded-lg shadow-md">
+              <!-- Duration overlay -->
+              <div v-if="event.duration" class="absolute bottom-1 right-1 bg-black bg-opacity-80 text-white text-xs px-1.5 py-0.5 rounded font-medium">
+                {{ event.duration }}
+              </div>
+            </div>            <!-- Transparent area for non-video events -->
+            <div v-else class="w-72 h-54">
+              <!-- Empty transparent space -->
+            </div>
           </div>
         </div>
       </div>

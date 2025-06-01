@@ -1,19 +1,28 @@
 <!-- Creator profile header -->
 <template>
   <div class="bg-white rounded-lg border border-gray-300 p-6 mb-6">
-    <div class="flex items-start space-x-6">      <!-- Large creator logo -->
+    <div class="flex items-start space-x-6">
+      <!-- Avatar or thumbnail space -->
       <div class="flex-shrink-0">
-        <div v-if="creator.avatarUrl" class="relative">
-          <!-- Large creator avatar/logo -->
+        <div v-if="creator.bannerUrl || creator.avatarUrl" class="relative">
+          <!-- Show banner thumbnail if available, otherwise avatar -->
           <img 
+            :src="creator.bannerUrl || creator.avatarUrl" 
+            :alt="creator.name"
+            :class="creator.bannerUrl ? 'w-32 h-20 rounded-lg object-cover' : 'w-20 h-20 rounded-full'"
+            class="ring-4 ring-gray-100"
+          >
+          <!-- Small avatar overlay on banner if banner exists -->
+          <img 
+            v-if="creator.bannerUrl && creator.avatarUrl"
             :src="creator.avatarUrl" 
             :alt="creator.name"
-            class="w-40 h-40 rounded-full object-cover ring-4 ring-gray-100"
+            class="absolute -bottom-2 -right-2 w-10 h-10 rounded-full ring-2 ring-white"
           >
         </div>
-        <!-- Blank space if no avatar -->
-        <div v-else class="w-40 h-40 bg-gray-100 rounded-full flex items-center justify-center">
-          <svg class="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <!-- Blank space if no images -->
+        <div v-else class="w-32 h-20 bg-gray-100 rounded-lg flex items-center justify-center">
+          <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
           </svg>
         </div>
