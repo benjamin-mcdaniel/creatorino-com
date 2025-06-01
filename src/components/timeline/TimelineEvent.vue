@@ -19,11 +19,9 @@
                 <h3 class="text-lg font-bold text-gray-900 mb-3 leading-tight">{{ event.title }}</h3>
                 <p class="text-sm text-gray-600 leading-relaxed mb-2">{{ event.description }}</p>
               </div>
-            </div>
-
-            <!-- Metrics with platform badges inline -->
+            </div>            <!-- Metrics with platform badges and content type indicators inline -->
             <div class="flex items-center justify-between">
-              <!-- Platform badges on the left -->
+              <!-- Platform badges and content type indicators on the left -->
               <div class="flex items-center space-x-2">
                 <span class="inline-flex items-center px-2 py-1 rounded text-sm font-medium bg-red-100 text-red-800">
                   <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 24 24">
@@ -31,10 +29,33 @@
                   </svg>
                   YouTube
                 </span>
-                <span v-if="event.type === 'stream'" class="inline-flex items-center px-2 py-1 rounded text-sm font-medium bg-purple-100 text-purple-800">
-                  Live Stream
+                <!-- Content type indicator based on event type -->
+                <span v-if="event.type === 'video_upload'" class="inline-flex items-center px-2 py-1 rounded text-sm font-medium bg-blue-100 text-blue-800">
+                  <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/>
+                  </svg>
+                  Video
                 </span>
-              </div>              <!-- Metrics on the right -->
+                <span v-else-if="event.type === 'stream'" class="inline-flex items-center px-2 py-1 rounded text-sm font-medium bg-purple-100 text-purple-800">
+                  <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>
+                  </svg>
+                  Stream
+                </span>
+                <span v-else-if="event.type === 'announcement'" class="inline-flex items-center px-2 py-1 rounded text-sm font-medium bg-green-100 text-green-800">
+                  <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                  </svg>
+                  IRL
+                </span>
+                <span v-else-if="event.type === 'collaboration' || event.type === 'milestone'" class="inline-flex items-center px-2 py-1 rounded text-sm font-medium bg-orange-100 text-orange-800">
+                  <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 4v12l-4-2-4 2V4M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                  </svg>
+                  Post
+                </span>
+              </div><!-- Metrics on the right -->
               <div class="flex items-center space-x-6">
                 <div class="text-left">
                   <p class="text-base font-bold text-gray-900">{{ formatMetricValue(event.views) }}</p>

@@ -23,11 +23,10 @@
       <!-- Error State -->
       <div v-else-if="error" class="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700 mb-6">
         {{ error }}
-      </div>
-
-      <!-- Creator Content -->
+      </div>      <!-- Creator Content -->
       <template v-else-if="currentCreator">
         <CreatorHeader :creator="currentCreator" />
+        <GrowthStatsGraph :creator="currentCreator" />
         <Timeline :creator="currentCreator" />
       </template>
     </div>
@@ -41,6 +40,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useCreatorStore } from '../stores/creator'
 import MainLayout from '../components/layout/MainLayout.vue'
 import CreatorHeader from '../components/creator/CreatorHeader.vue'
+import GrowthStatsGraph from '../components/creator/GrowthStatsGraph.vue'
 import Timeline from '../components/timeline/Timeline.vue'
 
 const route = useRoute()
