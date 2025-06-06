@@ -1,0 +1,56 @@
+﻿{
+    "Details":  [
+                    {
+                        "Status":  "PASS",
+                        "Name":  "Database Connection",
+                        "Response":  {
+                                         "connected":  true,
+                                         "database":  "creatorino",
+                                         "cluster":  "cluster0.fbfpthy.mongodb.net",
+                                         "timestamp":  "2025-06-06T08:11:55.203Z",
+                                         "testQuery":  "success"
+                                     }
+                    },
+                    {
+                        "Status":  "FAIL",
+                        "Name":  "Collection Access",
+                        "Response":  {
+                                         "message":  "Creatorino API",
+                                         "endpoints":  "/api/search/live?q=query\u0026limit=10 /api/search/advanced?q=query\u0026page=1\u0026limit=25 /api/creator/{platform}/{id}"
+                                     }
+                    },
+                    {
+                        "Status":  "PASS",
+                        "Name":  "Creator Cache Count",
+                        "Response":  {
+                                         "totalCreators":  0,
+                                         "timestamp":  "2025-06-06T08:11:55.491Z"
+                                     }
+                    },
+                    {
+                        "Status":  "FAIL",
+                        "Name":  "Search Cache",
+                        "Response":  {
+                                         "creators":  ""
+                                     }
+                    },
+                    {
+                        "Status":  "FAIL",
+                        "Name":  "Recent Creators",
+                        "Response":  {
+                                         "message":  "Creatorino API",
+                                         "endpoints":  "/api/search/live?q=query\u0026limit=10 /api/search/advanced?q=query\u0026page=1\u0026limit=25 /api/creator/{platform}/{id}"
+                                     }
+                    },
+                    {
+                        "Status":  "FAIL",
+                        "Name":  "Database Health",
+                        "Response":  {
+                                         "message":  "Creatorino API",
+                                         "endpoints":  "/api/search/live?q=query\u0026limit=10 /api/search/advanced?q=query\u0026page=1\u0026limit=25 /api/creator/{platform}/{id}"
+                                     }
+                    }
+                ],
+    "Failed":  4,
+    "Passed":  2
+}

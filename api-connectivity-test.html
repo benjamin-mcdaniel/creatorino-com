@@ -1,0 +1,29 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>API Test</title>
+</head>
+<body>
+    <script>
+        const API_BASE = 'https://creatorino-api.benjamin-f-mcdaniel.workers.dev';
+        
+        async function testApiCall() {
+            try {
+                const response = await fetch(API_BASE + '/health');
+                const data = await response.json();
+                console.log('API Test Success:', data);
+                return true;
+            } catch (error) {
+                console.error('API Test Failed:', error);
+                return false;
+            }
+        }
+        
+        testApiCall().then(success => {
+            document.body.innerHTML = success ? 
+                '<h1 style="color: green;">API Connection: SUCCESS</h1>' : 
+                '<h1 style="color: red;">API Connection: FAILED</h1>';
+        });
+    </script>
+</body>
+</html>

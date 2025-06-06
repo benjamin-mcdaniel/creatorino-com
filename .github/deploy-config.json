@@ -1,0 +1,9 @@
+﻿{
+    "mongoCluster": "cluster0.fbfpthy.mongodb.net",
+    "mongoUsername": "creatorino-api",
+    "mongoPassword": "7gDFxDywzW4e4dk3tHfbEhMKgdR2juSXU",
+    "twitchClientSecret": "d5tspqth8kr5chh3e12uh31kjtl79w",
+    "youtubeKey": "AIzaSyAut7DLNDoT0I7QFn75yyRMLpB5H6grKts",
+    "mongoDatabase": "creatorino",
+    "twitchClientId": "2y2g6iylmsg32tbpx5bni79gyqprrs"
+}

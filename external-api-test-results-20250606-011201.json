@@ -1,0 +1,96 @@
+﻿{
+    "Details":  [
+                    {
+                        "Status":  "PASS",
+                        "Name":  "YouTube API Status",
+                        "Response":  {
+                                         "status":  "ok",
+                                         "quotaUsage":  "unknown",
+                                         "lastTest":  "2025-06-06T08:11:56.811Z",
+                                         "testResults":  1
+                                     }
+                    },
+                    {
+                        "Status":  "FAIL",
+                        "Name":  "YouTube Search - Gaming",
+                        "Response":  {
+                                         "message":  "Creatorino API",
+                                         "endpoints":  "/api/search/live?q=query\u0026limit=10 /api/search/advanced?q=query\u0026page=1\u0026limit=25 /api/creator/{platform}/{id}"
+                                     }
+                    },
+                    {
+                        "Status":  "FAIL",
+                        "Name":  "YouTube Search - Popular Creator",
+                        "Response":  {
+                                         "message":  "Creatorino API",
+                                         "endpoints":  "/api/search/live?q=query\u0026limit=10 /api/search/advanced?q=query\u0026page=1\u0026limit=25 /api/creator/{platform}/{id}"
+                                     }
+                    },
+                    {
+                        "Status":  "FAIL",
+                        "Name":  "YouTube Channel Details",
+                        "Response":  {
+                                         "creator":  "@{platform=youtube; id=UC-lHJZR3Gqxm24_Vd_AJ5Yw; name=PewDiePie; description=I make videos.; thumbnail=https://yt3.ggpht.com/vik8mAiwHQbXiFyKfZ3__p55_VBdGvwxPpuPJBBwdbF0PjJxikXhrP-C3nLQAMAxGNd_-xQCIg=s88-c-k-c0x00ffffff-no-rj; banner=https://yt3.googleusercontent.com/vg_f9mYBpTkhj44RPlyu4ZN_qUwpSGhQ5zwXLCwZpZUJ12EtQlMf-HwI6MtB1Nv6h8oN9W3emA; url=https://www.youtube.com/channel/UC-lHJZR3Gqxm24_Vd_AJ5Yw; subscribers=110000000; videos=4816; views=29549170651; links=System.Object[]; verified=True}"
+                                     }
+                    },
+                    {
+                        "Status":  "PASS",
+                        "Name":  "Twitch API Status",
+                        "Response":  {
+                                         "status":  "ok",
+                                         "tokenValid":  true,
+                                         "lastTest":  "2025-06-06T08:11:57.928Z"
+                                     }
+                    },
+                    {
+                        "Status":  "FAIL",
+                        "Name":  "Twitch Search - Gaming",
+                        "Response":  {
+                                         "message":  "Creatorino API",
+                                         "endpoints":  "/api/search/live?q=query\u0026limit=10 /api/search/advanced?q=query\u0026page=1\u0026limit=25 /api/creator/{platform}/{id}"
+                                     }
+                    },
+                    {
+                        "Status":  "FAIL",
+                        "Name":  "Twitch Search - Popular Streamer",
+                        "Response":  {
+                                         "message":  "Creatorino API",
+                                         "endpoints":  "/api/search/live?q=query\u0026limit=10 /api/search/advanced?q=query\u0026page=1\u0026limit=25 /api/creator/{platform}/{id}"
+                                     }
+                    },
+                    {
+                        "Status":  "FAIL",
+                        "Error":  "The remote server returned an error: (404) Not Found.",
+                        "Name":  "Twitch User Details"
+                    },
+                    {
+                        "Status":  "PASS",
+                        "Name":  "Advanced Search - Combined Results",
+                        "Response":  {
+                                         "results":  "         "
+                                     }
+                    },
+                    {
+                        "Status":  "PASS",
+                        "Name":  "YouTube Quota Usage",
+                        "Response":  {
+                                         "quotaUsage":  "unknown",
+                                         "quotaLimit":  10000,
+                                         "note":  "YouTube API does not provide quota usage information",
+                                         "timestamp":  "2025-06-06T08:12:00.741Z"
+                                     }
+                    },
+                    {
+                        "Status":  "PASS",
+                        "Name":  "Twitch Rate Limit Status",
+                        "Response":  {
+                                         "rateLimitRemaining":  "unknown",
+                                         "rateLimitReset":  "unknown",
+                                         "note":  "Twitch rate limit information not available through client credentials flow",
+                                         "timestamp":  "2025-06-06T08:12:00.826Z"
+                                     }
+                    }
+                ],
+    "Failed":  6,
+    "Passed":  5
+}

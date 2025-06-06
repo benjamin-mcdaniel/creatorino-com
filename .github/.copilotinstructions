@@ -1,27 +1,27 @@
-# How to Build Creatorino - Content Creator Analytics Platform
+# How to Build Creatorino - Content Creator timeline Platform
 
-**Frontend (Cloudflare Pages)**: Build a lightweight React/Vue app with sidebar navigation, creator profile header, and vertical timeline component. Use Tailwind CSS for responsive design.
+**Frontend (Cloudflare Pages)**: Build a lightweight app for the deployment of the frontend.
 
-**Backend (Cloudflare Workers)**: Create API endpoints for data fetching, YouTube API integration, and CRUD operations. Use Hono.js framework for routing and middleware.
+**Backend (Cloudflare Workers)**: Create API endpoints for data fetching, YouTube API integration, and CRUD operations. 
 
-**Database Design (MongoDB)**: Use collection-per-creator approach: `creators` collection for profiles, `creator_analytics_{creatorId}` collections for individual timelines to handle thousands of entries efficiently.
+**Database (MongoDB)**: Use mongodb, connection data is in this file, database is called creatorino, user is creatorino-api
 
-**Data Structure**: Creator profile stores name, platforms, stats summary. Analytics collections store timestamped entries with metrics, descriptions, and platform sources.
+**Data Structure**: i dont know yet, you decide
 
-**Timeline Component**: Build vertical timeline with date markers on left, expandable content cards on right. Implement virtualization for performance with large datasets.
+**first goals** i want a very simple site, a frontend where you can search for youtube or twitch channels, the search field on the frontend looks in real time for entries in the database, if no entries exist then it says no cache results found, lets do an adavanced search. this way the user gets to see what has already been saved as options to the data base, if its not in the database it then looks for it in its api connections. the user should be presented with at max 25 options per page of results that they can flip through of possible twitch and youtube results. when the click one of the results it should take them to a custom creator page that searches that twitch or youtube users profile fore basic information like profile and background picture and user information and presents it based on the fields possible, it should also look for other platform links and provide those as well on the users profile page, like if they have a twitter account linked or a cross link to a twitch or youtube channel. 
 
-**Authentication**: we will add after, use a demo setup
+the end result for this section is to setup a frontend website with cloudflare that works, a database in mongodb that works to cache these results, and an api backend in cloudflare to access the database with to protect the database connection. 
 
-**API Endpoints**: we will create those later use demo data
+the api should work with these features, search of the database for results in the website live search, collection of channel data when a user selects a channel to view and to save that data to the database. 
 
-**Deployment**: Frontend on Cloudflare Pages with automatic builds, Workers for API, MongoDB Atlas for database. Use Cloudflare KV for caching frequently accessed data.
+**design constraints** we are using local powershell on a windows machine 
 
-**Future Scaling**: Design plugin system for new platforms (Twitch, TikTok). Each platform gets its own data fetcher worker and standardized data format for timeline consistency.
+**website design reqs** basic search page, search results box that shows up on the search page, live search drop down that shows max 10 results while typeing, a simple profile page for a creator that shows platform related data and cross platform links. i expect to merge both youtube an twitch content into the same page, so if the user selects a youtube channel assume they may also ahve a twitch section. make sure the user id is linked only via backlinked sites. for example of a user links to mrbeasts youtube channel on there twitch, twitch also needs a backlinke to the same url for youtube to add that url as a valid option for cross platform accounts. this prevents someone from claming access in there profile to something they dont own. user profile names should all be based on the youtube channel if possible if not then its based on the twtitch name. 
 
-**Performance**: Implement pagination for timeline (load 50 entries at a time), cache creator stats in KV store, use MongoDB indexes on creatorId and timestamp fields.
+**deploy guidenlines** 
+we need a deploy config file that saves all the keys and stettings needed to deploy the code. it also needs a single path deploy for deploying the api and then the frontend. each should be prompted yes no if we want to deploy them again. 
 
-**MVP Launch**: Start with manual creator onboarding, YouTube-only data, basic timeline and stats. Add user submissions and new platforms post-launch based on feedback.
+**access info**
+is in deploy config
 
-**framework** use vue and minimal packages, if one option is possible use it for multiple solutions. do not use multiple css solutions. 
-
-**terminal** && doesnt work in the terminal. 
+**File setup** api should be put in a seperate dir like frontend is. both need to be viewable to you but seperate for deploy ease of use. 

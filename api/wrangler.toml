@@ -1,0 +1,19 @@
+name = "creatorino-api"
+main = "src/index.js"
+compatibility_date = "2024-01-01"
+
+[vars]
+ENVIRONMENT = "production"
+
+[env.production]
+name = "creatorino-api"
+vars = { ENVIRONMENT = "production" }
+
+# Add these environment variables through Cloudflare Dashboard or wrangler secrets
+# wrangler secret put YOUTUBE_API_KEY
+# wrangler secret put TWITCH_CLIENT_ID  
+# wrangler secret put TWITCH_CLIENT_SECRET
+# wrangler secret put MONGO_API_KEY
+# wrangler secret put MONGO_APP_ID
+# wrangler secret put MONGO_CLUSTER
+# wrangler secret put MONGO_DATABASE

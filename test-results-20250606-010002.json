@@ -1,0 +1,40 @@
+﻿{
+    "TestSuites":  [
+                       {
+                           "Duration":  0.020949199999999998,
+                           "Status":  "ERROR",
+                           "Error":  "At C:\\Users\\benja\\Repo\\creatorino-com\\test-api.ps1:126 char:42\r\n+            ($content.results.Count -gt 0 -implies ($content.results[0 ...\r\n+                                          ~~~~~~~~\nUnexpected token \u0027-implies\u0027 in expression or statement.\r\n\r\nAt C:\\Users\\benja\\Repo\\creatorino-com\\test-api.ps1:126 char:51\r\n+            ($content.results.Count -gt 0 -implies ($content.results[0 ...\r\n+                                                   ~\nUnexpected token \u0027(\u0027 in expression or statement.\r\n\r\nAt C:\\Users\\benja\\Repo\\creatorino-com\\test-api.ps1:126 char:50\r\n+            ($content.results.Count -gt 0 -implies ($content.results[0 ...\r\n+                                                  ~\nMissing closing \u0027)\u0027 in expression.\r\n\r\nAt C:\\Users\\benja\\Repo\\creatorino-com\\test-api.ps1:122 char:124\r\n+ ... \" -Url \"$ApiUrl/api/search/advanced?q=pewdiepie\u0026limit=3\" -Validator {\r\n+                                                                         ~\nMissing closing \u0027}\u0027 in statement block or type definition.\r\n\r\nAt C:\\Users\\benja\\Repo\\creatorino-com\\test-api.ps1:126 char:108\r\n+ ... 0 -implies ($content.results[0].platform -in @(\"youtube\", \"twitch\")))\r\n+                                                                         ~\nUnexpected token \u0027)\u0027 in expression or statement.\r\n\r\nAt C:\\Users\\benja\\Repo\\creatorino-com\\test-api.ps1:127 char:1\r\n+ }\r\n+ ~\nUnexpected token \u0027}\u0027 in expression or statement.",
+                           "Name":  "Basic API Tests"
+                       },
+                       {
+                           "Duration":  1.8176968,
+                           "Status":  "PASSED",
+                           "Name":  "MongoDB Integration",
+                           "Details":  {
+
+                                       }
+                       },
+                       {
+                           "Duration":  0.9754892,
+                           "Status":  "ERROR",
+                           "Error":  "Cannot bind parameter \u0027ForegroundColor\u0027. Cannot convert value \"Purple\" to type \"System.ConsoleColor\". Error: \"Unable to match the identifier name Purple to a valid enumerator name. Specify one of the following enumerator names and try again:\r\nBlack, DarkBlue, DarkGreen, DarkCyan, DarkRed, DarkMagenta, DarkYellow, Gray, DarkGray, Blue, Green, Cyan, Red, Magenta, Yellow, White\"",
+                           "Name":  "External APIs (YouTube/Twitch)"
+                       },
+                       {
+                           "Duration":  2.8853934999999997,
+                           "Status":  "PASSED",
+                           "Name":  "Frontend Connectivity",
+                           "Details":  {
+
+                                       }
+                       }
+                   ],
+    "TotalDuration":  5.7860077,
+    "EndTime":  "\/Date(1749196802285)\/",
+    "Summary":  {
+                    "TotalFailed":  2,
+                    "TotalPassed":  2,
+                    "TotalSkipped":  0
+                },
+    "StartTime":  "\/Date(1749196796499)\/"
+}

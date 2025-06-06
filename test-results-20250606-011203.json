@@ -1,0 +1,42 @@
+﻿{
+    "TestSuites":  [
+                       {
+                           "Duration":  4.8150984999999995,
+                           "Status":  "ERROR",
+                           "Error":  "An item with the same key has already been added.",
+                           "Name":  "Basic API Tests"
+                       },
+                       {
+                           "Duration":  1.3478492,
+                           "Status":  "PASSED",
+                           "Name":  "MongoDB Integration",
+                           "Details":  {
+
+                                       }
+                       },
+                       {
+                           "Duration":  5.4176627,
+                           "Status":  "PASSED",
+                           "Name":  "External APIs (YouTube/Twitch)",
+                           "Details":  {
+
+                                       }
+                       },
+                       {
+                           "Duration":  1.74199,
+                           "Status":  "PASSED",
+                           "Name":  "Frontend Connectivity",
+                           "Details":  {
+
+                                       }
+                       }
+                   ],
+    "TotalDuration":  13.3485275,
+    "EndTime":  "\/Date(1749197523513)\/",
+    "Summary":  {
+                    "TotalFailed":  1,
+                    "TotalPassed":  3,
+                    "TotalSkipped":  0
+                },
+    "StartTime":  "\/Date(1749197510165)\/"
+}
